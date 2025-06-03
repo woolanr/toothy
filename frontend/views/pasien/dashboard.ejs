@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Pasien - Happy Toothy</title>
+    <link rel="stylesheet" href="/css/style.css"> </head>
+<body>
+    <header>
+        <h1>Selamat Datang, <span id="patientDashboard_nama">Pasien</span>!</h1>
+        <button id="patientLogoutBtn">Logout</button>
+    </header>
+
+    <main class="container">
+        <section id="completeProfileSection" style="display:none;" class="card">
+            <h2>Lengkapi Profil Anda</h2>
+            <p>Untuk dapat menggunakan semua fitur, termasuk membuat janji temu, mohon lengkapi data profil Anda.</p>
+            <form id="patientProfileForm" class="auth-form">
+                <div class="form-group">
+                    <label for="profile_nama_lengkap">Nama Lengkap</label>
+                    <input type="text" id="profile_nama_lengkap" name="nama_lengkap" required>
+                </div>
+                <div class="form-group">
+                    <label for="profile_email">Email (tidak dapat diubah)</label>
+                    <input type="email" id="profile_email" name="email" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label for="profile_jenis_kelamin">Jenis Kelamin</label>
+                    <select id="profile_jenis_kelamin" name="jenis_kelamin" required>
+                        <option value="">Pilih...</option>
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="profile_tanggal_lahir">Tanggal Lahir</label>
+                    <input type="date" id="profile_tanggal_lahir" name="tanggal_lahir" required>
+                </div>
+                <div class="form-group">
+                    <label for="profile_alamat">Alamat Lengkap</label>
+                    <textarea id="profile_alamat" name="alamat" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="profile_no_telepon">No. Telepon</label>
+                    <input type="tel" id="profile_no_telepon" name="no_telepon" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Simpan Profil</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="mainPatientDashboardContent" style="display:none;">
+            <h2>Dashboard Saya</h2>
+
+            <div class="dashboard-section card">
+                <h3>Profil Saya</h3>
+                <p>Username: <span id="patientDashboard_username">-</span></p>
+                </div>
+
+            <div class="dashboard-section card" id="bookingSection">
+                <h3>Buat Janji Temu Baru</h3>
+                <form id="newAppointmentForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="serviceSelect">Pilih Layanan:</label>
+                        <select id="serviceSelect" name="id_service" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="doctorSelect">Pilih Dokter:</label>
+                        <select id="doctorSelect" name="id_doctor" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="appointmentDate">Tanggal Janji Temu:</label>
+                        <input type="date" id="appointmentDate" name="tanggal_janji" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appointmentTime">Waktu Janji Temu:</label>
+                        <select id="appointmentTime" name="waktu_janji" required>
+                            <option value="">Pilih tanggal dan dokter dulu</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="patientNotes">Catatan (Opsional):</label>
+                        <textarea id="patientNotes" name="catatan_pasien" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Buat Janji Temu</button>
+                </form>
+            </div>
+
+            <div class="dashboard-section card">
+                <h3>Janji Temu Mendatang</h3>
+                <ul id="upcomingAppointments">
+                    <li>Memuat janji temu...</li>
+                </ul>
+            </div>
+
+            <div class="dashboard-section card">
+                <h3>Riwayat Kunjungan</h3>
+                <ul id="visitHistory">
+                    <li>Memuat riwayat...</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/script.js"></script>
+    </body>
+</html>

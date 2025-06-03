@@ -1,0 +1,29 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production
+/build
+/dist
+/tmp
+
+# Misc
+.DS_Store
+.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.parcel-cache
+.vscode/
+
+# Database related (sensitive data or large files)
+*.sql # For any exported SQL dumps, though often best to handle with caution
+*.dump
+/database/ # If you have a specific folder for database files (e.g., local SQLite, or backup dumps)
+
+# PHPMyAdmin related (usually not directly in your project, but if you have any local config)
+/phpmyadmin_config.inc.php # Example, if you accidentally put it in your project

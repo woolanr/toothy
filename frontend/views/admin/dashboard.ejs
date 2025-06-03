@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Happy Toothy</title>
+    <link rel="stylesheet" href="/css/style.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/admin/dashboard">
+                    <img src="/assets/images/logo toothy.png" alt="Happy Toothy Logo" class="sidebar-logo">
+                    <span class="sidebar-title">Happy Toothy</span>
+                </a>
+            </div>
+            <div class="sidebar-profile">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="profile-info">
+                    <span id="adminUsername" class="profile-name">Admin</span> <span class="profile-role">Administrator</span>
+                </div>
+                <button id="logoutButton" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active" data-section="overview">
+                        <a href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item has-submenu" data-section="user-management">
+                        <a href="#"><i class="fas fa-users"></i> Manajemen Pengguna <i class="fas fa-chevron-down submenu-icon"></i></a>
+                        <ul class="submenu">
+                            <li data-subsection="user-list"><a href="#"><i class="fas fa-list"></i> Daftar Pengguna</a></li>
+                            <li data-subsection="add-user"><a href="#"><i class="fas fa-user-plus"></i> Tambah Pengguna Baru</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item" data-section="doctor-management">
+                        <a href="#"><i class="fas fa-user-md"></i> Manajemen Dokter</a>
+                    </li>
+                    <li class="nav-item" data-section="service-management">
+                        <a href="#"><i class="fas fa-tooth"></i> Manajemen Layanan</a>
+                    </li>
+                    <li class="nav-item" data-section="appointment-management">
+                        <a href="#"><i class="fas fa-calendar-check"></i> Manajemen Janji Temu</a>
+                    </li>
+                    <li class="nav-item" data-section="clinic-settings">
+                        <a href="#"><i class="fas fa-cog"></i> Pengaturan Klinik</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header-dashboard">
+                <h1 id="pageTitle">Dashboard Admin</h1>
+                <div class="header-right">
+                    <div class="search-box">
+                        <input type="text" placeholder="Cari...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span> </div>
+                </div>
+            </header>
+
+            <section class="content-section" id="overview-section">
+                <div class="welcome-card card">
+                    <h2>Selamat datang, <span id="welcomeAdminName">Admin</span>!</h2>
+                    <p>Ringkasan aktivitas dan status klinik Anda.</p>
+                </div>
+                <div class="summary-cards-grid">
+                    <div class="summary-card card">
+                        <div class="card-icon"><i class="fas fa-users"></i></div>
+                        <div class="card-info">
+                            <span class="card-value" id="totalUsers">0</span>
+                            <span class="card-label">Total Pengguna</span>
+                        </div>
+                    </div>
+                    <div class="summary-card card">
+                        <div class="card-icon"><i class="fas fa-user-md"></i></div>
+                        <div class="card-info">
+                            <span class="card-value" id="totalDoctors">0</span>
+                            <span class="card-label">Total Dokter</span>
+                        </div>
+                    </div>
+                    <div class="summary-card card">
+                        <div class="card-icon"><i class="fas fa-user-check"></i></div>
+                        <div class="card-info">
+                            <span class="card-value" id="pendingVerifications">0</span>
+                            <span class="card-label">Verifikasi Tertunda</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="recent-activity card">
+                    <h3>Aktivitas Terbaru</h3>
+                    <ul>
+                        <li><i class="fas fa-user-plus"></i> Pengguna baru mendaftar: Jennie (2 menit yang lalu)</li>
+                        <li><i class="fas fa-calendar-plus"></i> Janji temu baru dibuat: Jaehyun (5 menit yang lalu)</li>
+                        <li><i class="fas fa-bell"></i> Verifikasi email tertunda: Paus</li>
+                    </ul>
+                </div>
+                <div class="upcoming-appointments-admin card">
+                    <h3>Janji Temu Mendatang</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Pasien</th>
+                                <th>Dokter</th>
+                                <th>Layanan</th>
+                                <th>Tanggal</th>
+                                <th>Waktu</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="upcomingAppointmentsAdminBody">
+                            <tr><td colspan="7" class="text-center">Tidak ada janji temu mendatang.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="content-section hidden" id="user-list-section">
+                <div class="section-header">
+                    <h2>Daftar Pengguna</h2>
+                    <button class="btn btn-primary" id="addUserBtnOnList"><i class="fas fa-plus"></i> Tambah Pengguna Baru</button> </div>
+                <div class="filter-controls">
+                    <input type="text" id="userSearch" placeholder="Cari pengguna...">
+                    <select id="userLevelFilter">
+                        <option value="">Semua Level</option>
+                        <option value="1">Admin</option>
+                        <option value="2">Dokter</option>
+                        <option value="3">Staff</option>
+                        <option value="4">Pasien</option>
+                    </select>
+                    <select id="userStatusFilter">
+                        <option value="">Semua Status</option>
+                        <option value="1">Valid</option>
+                        <option value="2">Belum Valid</option>
+                        <option value="3">Keluar</option>
+                    </select>
+                </div>
+                <div class="data-table-container card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Nama Lengkap</th>
+                                <th>Level</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userListBody">
+                            <tr><td colspan="7" class="text-center">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="pagination"></div>
+                </div>
+            </section>
+            
+            <section class="content-section hidden" id="add-user-section">
+                <h2>Tambah Pengguna Baru</h2>
+                <div class="auth-container card">
+                    <form id="addUserForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="addUser_nama_lengkap">Nama Lengkap</label>
+                            <input type="text" id="addUser_nama_lengkap" name="nama_lengkap" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="addUser_email">Email</label>
+                            <input type="email" id="addUser_email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="addUser_username">Username</label>
+                            <input type="text" id="addUser_username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="addUser_password">Password</label>
+                            <input type="password" id="addUser_password" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="addUser_id_level_user">Level Pengguna</label>
+                            <select id="addUser_id_level_user" name="id_level_user" required>
+                                <option value="1">Admin</option>
+                                <option value="2">Dokter</option>
+                                <option value="3">Staff</option>
+                                <option value="4">Pasien</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-full-width">Tambahkan Pengguna</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="content-section hidden" id="doctor-management-section">
+                <div class="section-header">
+                    <h2>Manajemen Dokter</h2>
+                    <button class="btn btn-primary" id="openAddDoctorModalButton"><i class="fas fa-plus"></i> Tambah Dokter Baru</button> </div>
+                <div class="data-table-container card">
+                    <table class="data-table">
+                        <thead>              
+                            <tr>
+                                <th>ID Dokter</th>
+                                <th>ID User</th>
+                                <th>Nama Dokter</th>
+                                <th>Spesialisasi</th>
+                                <th>Email</th>
+                                <th>No. Telepon</th>
+                                <th>No. Lisensi</th>
+                                <th>Pengalaman (Thn)</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>             
+                        <tbody id="doctorListBody">
+                            </tbody>             
+                    </table>             
+                </div>
+            </section>
+
+            <section class="content-section hidden" id="service-management-section">
+                <div class="section-header">
+                    <h2>Manajemen Layanan</h2>
+                    <button class="btn btn-primary" id="openAddServiceModalButton">
+                        <i class="fas fa-plus"></i> Tambah Layanan Baru
+                    </button>
+                </div>
+
+                <div class="filter-controls" style="margin-bottom: 20px; margin-top:10px;">
+                    <label for="serviceStatusFilter" style="margin-right: 10px;">Filter Status:</label>
+                    <select id="serviceStatusFilter">
+                        <option value="Aktif">Aktif</option>
+                        <option value="Nonaktif">Nonaktif</option>
+                        <option value="Semua">Semua</option>
+                    </select>
+                </div>
+                <div class="data-table-container card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Layanan</th>
+                                <th>Deskripsi</th>
+                                <th>Durasi (Menit)</th>
+                                <th>Harga (Rp)</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>                    
+                        <tbody id="serviceListBody">
+                            <tr><td colspan="6" class="text-center">Memuat data layanan...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div id="addServiceModal" class="modal">
+                <div class="modal-content card">    
+                    <div class="modal-header">
+                        <h2 id="serviceModalTitle">Tambah Layanan Baru</h2>
+                        <span class="close-button" id="closeServiceModalBtn">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addServiceForm" class="auth-form">
+                            <input type="hidden" id="editServiceId" name="editServiceId">
+    
+                            <div class="form-group">
+                                <label for="addService_nama_layanan">Nama Layanan</label>
+                                <input type="text" id="addService_nama_layanan" name="nama_layanan" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="addService_deskripsi">Deskripsi (Opsional)</label>
+                                <textarea id="addService_deskripsi" name="deskripsi" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="addService_harga">Harga (Rp)</label>
+                                <input type="number" id="addService_harga" name="harga" min="0" step="any" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="addService_durasi_menit">Durasi (Menit, Opsional)</label>
+                                <input type="number" id="addService_durasi_menit" name="durasi_menit" min="0">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" id="saveServiceBtn" class="btn btn-primary btn-full-width">Simpan Layanan</button>
+                                <button type="button" id="cancelServiceModalBtn" class="btn btn-secondary btn-full-width" style="margin-top:10px;">Batal</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <section class="content-section hidden" id="appointment-management-section">
+                <h2>Manajemen Janji Temu</h2>
+                <p>Konten untuk mengelola janji temu akan ditampilkan di sini.</p>
+            </section>
+
+            <section class="content-section hidden" id="clinic-settings-section">
+                <h2>Pengaturan Klinik</h2>
+                <p>Konten untuk pengaturan umum klinik akan ditampilkan di sini.</p>
+            </section>
+        </main>
+    </div>
+
+    <div id="addDoctorModal" class="modal">
+        <div class="modal-content card">
+            <div class="modal-header">
+                <h2>Tambah Dokter Baru</h2>
+                <span class="close-button" id="closeAddDoctorModalBtn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addDoctorForm" class="auth-form">
+                    <input type="hidden" id="editDoctorId" name="editDoctorId"> <div class="form-group">
+                    <label for="addDoctor_nama_lengkap">Nama Lengkap</label>
+                    <input type="text" id="addDoctor_nama_lengkap" name="nama_lengkap" required>
+                </div>
+                    <div class="form-group">
+                        <label for="addDoctor_username">Username</label>
+                        <input type="text" id="addDoctor_username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addDoctor_email">Email</label>
+                        <input type="email" id="addDoctor_email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addDoctor_password">Password</label>
+                        <input type="password" id="addDoctor_password" name="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addDoctor_no_telepon">No. Telepon (Opsional)</label>
+                        <input type="tel" id="addDoctor_no_telepon" name="no_telepon">
+                    </div>
+                    <hr> <h4 style="margin-top:20px; margin-bottom:10px;">Detail Dokter:</h4>
+                    <div class="form-group">
+                        <label for="addDoctor_spesialisasi">Spesialisasi</label>
+                        <input type="text" id="addDoctor_spesialisasi" name="spesialisasi" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addDoctor_lisensi_no">No. Lisensi</label>
+                        <input type="text" id="addDoctor_lisensi_no" name="lisensi_no" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addDoctor_pengalaman_tahun">Pengalaman (Tahun)</label>
+                        <input type="number" id="addDoctor_pengalaman_tahun" name="pengalaman_tahun" min="0" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-full-width">Simpan Dokter</button>
+                        <button type="button" id="cancelAddDoctorBtn" class="btn btn-secondary btn-full-width" style="margin-top:10px;">Batal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/script.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const currentPath = window.location.pathname;
+        if (currentPath === '/admin/dashboard') {
+            if (typeof fetchDashboardData === 'function') fetchDashboardData();
+        }
+
+        const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+        const submenus = document.querySelectorAll('.sidebar-nav .submenu a');
+        const contentSections = document.querySelectorAll('.main-content .content-section');
+        const pageTitleElement = document.getElementById('pageTitle');
+        const addUserBtnOnList = document.getElementById('addUserBtnOnList'); // Tombol di section user list (ID diubah)
+        
+        function showSection(sectionIdToShow) {
+            console.log(`showSection called for: ${sectionIdToShow}`);
+            contentSections.forEach(section => {
+                section.classList.add('hidden');
+            });
+            const currentSectionElement = document.getElementById(sectionIdToShow);
+            
+            if (currentSectionElement) {
+                currentSectionElement.classList.remove('hidden');
+                let titleText = 'Dashboard Admin';
+                const navLink = document.querySelector(`.nav-item[data-section="${sectionIdToShow.replace('-section', '')}"] > a, .submenu li[data-subsection="${sectionIdToShow.replace('-section', '')}"] > a`);
+                if (navLink) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = navLink.innerHTML;
+                    const iconInLink = tempDiv.querySelector('i.submenu-icon');
+                    if (iconInLink) iconInLink.remove();
+                    titleText = tempDiv.textContent.trim();
+                } else if (sectionIdToShow === 'add-user-section') {
+                    titleText = 'Tambah Pengguna Baru';
+                }
+                if(pageTitleElement) pageTitleElement.textContent = titleText;
+                
+                if (sectionIdToShow === 'overview-section') {
+                    console.log('Displaying overview section.');
+                } else if (sectionIdToShow === 'user-list-section') {
+                    console.log('Attempting to call fetchUsers for section:', sectionIdToShow);
+                    if (typeof fetchUsers === 'function') fetchUsers(); else console.error('fetchUsers function is not defined!');
+                } else if (sectionIdToShow === 'add-user-section') {
+                    console.log('Displaying add user section.');                        
+                } else if (sectionIdToShow === 'doctor-management-section') {
+                    console.log('Attempting to call fetchDoctors for section:', sectionIdToShow);
+                    if (typeof fetchDoctors === 'function') fetchDoctors(); else console.error('fetchDoctors function is not defined!');            
+                } else if (sectionIdToShow === 'service-management-section') {
+                console.log('Attempting to call fetchServices for section:', sectionIdToShow);
+                if (typeof fetchServices === 'function') {
+                    const serviceFilter = document.getElementById('serviceStatusFilter');
+                    fetchServices(serviceFilter ? serviceFilter.value : 'Aktif');
+                } else {       
+                    console.error('fetchServices function is not defined!');            
+                }
+            }
+            } else {
+                console.warn(`showSection: Section with ID '${sectionIdToShow}' not found.`);
+            }
+        }
+
+        navItems.forEach(item => {
+            const link = item.querySelector('a');
+            if (!link) return;
+            link.addEventListener('click', function(e) {
+                const parentNavItem = this.closest('.nav-item');
+                if (parentNavItem.classList.contains('has-submenu')) {
+                    e.preventDefault();
+                    parentNavItem.classList.toggle('active');
+                    const submenuElement = parentNavItem.querySelector('.submenu');
+                    if (submenuElement) submenuElement.classList.toggle('active');
+                } else if (parentNavItem.dataset.section) {
+                    e.preventDefault();
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    document.querySelectorAll('.submenu.active').forEach(sm => sm.classList.remove('active'));
+                    document.querySelectorAll('.nav-item .submenu li.active-submenu-item').forEach(si => si.classList.remove('active-submenu-item'));
+                    parentNavItem.classList.add('active');
+                    showSection(parentNavItem.dataset.section + '-section');
+                }
+            });
+        });
+
+        submenus.forEach(submenuLink => {
+            submenuLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                navItems.forEach(nav => nav.classList.remove('active'));
+                submenus.forEach(subLink => subLink.closest('li').classList.remove('active-submenu-item'));
+                const currentSubmenuLi = this.closest('li');
+                const parentNavItemWithSubmenu = this.closest('.nav-item.has-submenu');
+                if (currentSubmenuLi) currentSubmenuLi.classList.add('active-submenu-item');
+                if (parentNavItemWithSubmenu) {
+                    parentNavItemWithSubmenu.classList.add('active');
+                    const submenuElement = parentNavItemWithSubmenu.querySelector('.submenu');
+                    if (submenuElement) submenuElement.classList.add('active');
+                }
+                const subsectionId = currentSubmenuLi.dataset.subsection;
+                if (subsectionId === 'user-list') {
+                    showSection('user-list-section');
+                } else if (subsectionId === 'add-user') {
+                    showSection('add-user-section');
+                }
+            });
+        });
+
+        if (addUserBtnOnList) { // Menggunakan ID yang sudah diubah
+            addUserBtnOnList.addEventListener('click', () => {
+                navItems.forEach(nav => nav.classList.remove('active'));
+                submenus.forEach(subLink => subLink.closest('li').classList.remove('active-submenu-item'));
+                const userManagementMenu = document.querySelector('.nav-item[data-section="user-management"]');
+                if (userManagementMenu) {
+                    userManagementMenu.classList.add('active');
+                    const submenuElement = userManagementMenu.querySelector('.submenu');
+                    if (submenuElement) submenuElement.classList.add('active');
+                    const addUserSubmenuItem = userManagementMenu.querySelector('li[data-subsection="add-user"]');
+                    if (addUserSubmenuItem) addUserSubmenuItem.classList.add('active-submenu-item');
+                }
+                showSection('add-user-section');
+            });
+        }
+
+        // --- JAVASCRIPT UNTUK MODAL TAMBAH DOKTER BARU ---
+        const addDoctorModalElement = document.getElementById('addDoctorModal');
+        const openAddDoctorModalButton = document.getElementById('openAddDoctorModalButton'); // ID unik untuk tombol tambah dokter
+        const closeAddDoctorModalBtn = document.getElementById('closeAddDoctorModalBtn');
+        const cancelAddDoctorBtn = document.getElementById('cancelAddDoctorBtn');
+        const addDoctorForm = document.getElementById('addDoctorForm');
+
+        if (openAddDoctorModalButton && addDoctorModalElement) {
+            openAddDoctorModalButton.addEventListener('click', () => {
+                console.log('Tombol "Tambah Dokter Baru" diklik, menampilkan modal.');
+                addDoctorModalElement.style.display = 'block';
+                if(addDoctorForm) addDoctorForm.reset();
+            });
+        } else {
+            if (!openAddDoctorModalButton) console.error("Tombol 'Tambah Dokter Baru' (id: openAddDoctorModalButton) tidak ditemukan.");
+            if (!addDoctorModalElement) console.error("Elemen modal 'addDoctorModal' tidak ditemukan.");
+        }
+
+        if (closeAddDoctorModalBtn && addDoctorModalElement) {
+            closeAddDoctorModalBtn.addEventListener('click', () => {
+                addDoctorModalElement.style.display = 'none';
+            });
+        }
+
+        if (cancelAddDoctorBtn && addDoctorModalElement) {
+            cancelAddDoctorBtn.addEventListener('click', () => {
+                addDoctorModalElement.style.display = 'none';
+            });
+        }
+
+        if (addDoctorModalElement) {
+            window.addEventListener('click', (event) => {
+                if (event.target == addDoctorModalElement) {
+                    addDoctorModalElement.style.display = 'none';
+                }
+            });
+        }
+
+        if (addDoctorForm) {
+            addDoctorForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                console.log('Form Tambah/Edit Dokter disubmit.');
+                const editDoctorId = document.getElementById('editDoctorId').value; // Ambil ID dokter yang diedit (jika ada)
+                const isEditMode = !!editDoctorId; // True jika ada ID (mode edit), false jika tidak (mode tambah)
+                const nama_lengkap = document.getElementById('addDoctor_nama_lengkap').value;
+                const username = document.getElementById('addDoctor_username').value;
+                const email = document.getElementById('addDoctor_email').value;
+                const password = document.getElementById('addDoctor_password').value; // Akan diabaikan di backend jika tidak diisi saat edit
+                const no_telepon = document.getElementById('addDoctor_no_telepon').value;
+                const spesialisasi = document.getElementById('addDoctor_spesialisasi').value;
+                const lisensi_no = document.getElementById('addDoctor_lisensi_no').value;
+                const pengalaman_tahun = document.getElementById('addDoctor_pengalaman_tahun').value;
+        
+                if (!nama_lengkap || !username || !email || !spesialisasi || !lisensi_no || pengalaman_tahun === '') {
+                    alert('Mohon isi field yang wajib: Nama, Username, Email, Spesialisasi, No. Lisensi, Pengalaman.');
+                    return;
+                }
+        
+                if (!isEditMode && !password) {        
+                    alert('Password wajib diisi untuk dokter baru.');
+                    return;
+                }
+        
+                const doctorData = {
+                    nama_lengkap,
+                    username,
+                    email,
+                    no_telepon: no_telepon || null,
+                    spesialisasi,
+                    lisensi_no,
+                    pengalaman_tahun: parseInt(pengalaman_tahun)
+                };
+        
+                if (password) {            
+                    doctorData.password = password;
+                }
+        
+                let url = '/admin/doctors';
+                let method = 'POST';
+
+                if (isEditMode) {
+                    url = `/admin/doctors/${editDoctorId}`; // URL untuk update, menggunakan ID dokter
+                    method = 'PUT'; // Metode HTTP untuk update
+                    console.log(`Mode Edit. Mengirim PUT ke: ${url}`);
+                } else {
+                    console.log(`Mode Tambah. Mengirim POST ke: ${url}`);
+                }
+                console.log('Data yang akan dikirim:', doctorData);
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify(doctorData)
+                    });
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        alert(result.message || (isEditMode ? 'Data dokter berhasil diupdate!' : 'Dokter baru berhasil ditambahkan!'));
+                        addDoctorModalElement.style.display = 'none';
+                        addDoctorForm.reset();
+                        document.getElementById('editDoctorId').value = ''; // Reset ID edit setelah submit
+                        fetchDoctors(); // Muat ulang daftar dokter
+                    } else {
+                        alert(result.message || (isEditMode ? 'Gagal mengupdate data dokter.' : 'Gagal menambahkan dokter baru.'));
+                        console.error('Gagal menyimpan data dokter:', result);            
+                    }
+                } catch (error) {
+                    console.error('Error saat mengirim data dokter:', error);
+                    alert('Terjadi kesalahan saat menghubungi server.');
+                }
+            });
+        }
+
+        const initialActiveItem = document.querySelector('.sidebar-nav .nav-item.active'); // Cari item menu yang sudah ada kelas .active di HTML
+
+        if (initialActiveItem && initialActiveItem.dataset.section) { // <-- AWAL BLOK IF
+        const initialSectionId = initialActiveItem.dataset.section + '-section';
+        showSection(initialSectionId); 
+
+        if (initialActiveItem.dataset.section === 'service-management') {
+            const serviceFilter = document.getElementById('serviceStatusFilter');
+            if (serviceFilter && typeof fetchServices === 'function') {
+                console.log('Initial view is service-management, fetching services with default filter value:', serviceFilter.value);
+                fetchServices(serviceFilter.value); 
+            }
+        }
+    } else { // <-- AWAL BLOK ELSE YANG BENAR
+        console.log('No initial active nav item found in HTML, defaulting to overview-section.');
+        const overviewMenuItem = document.querySelector('.sidebar-nav .nav-item[data-section="overview"]');
+        if (overviewMenuItem) {
+            // navItems sudah didefinisikan di atas di dalam DOMContentLoaded yang sama
+            if (typeof navItems !== 'undefined') { 
+                navItems.forEach(nav => nav.classList.remove('active'));
+            }
+            overviewMenuItem.classList.add('active');
+        }
+        showSection('overview-section'); 
+    }
+    });
+    </script>
+</body>
+</html>
