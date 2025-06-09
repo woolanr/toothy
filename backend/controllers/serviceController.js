@@ -2,16 +2,12 @@
 const Service = require('../models/serviceModel'); // Impor Service model
 
 const serviceController = {
-    /**
-     * Membuat layanan baru.
-     */
+
     createService: async (req, res) => {
-        // Ambil data dari body request
         const { nama_layanan, deskripsi, harga, durasi_menit } = req.body;
         console.log('serviceController: createService called with body:', req.body);
 
-        // Validasi dasar (lakukan validasi lebih detail jika perlu)
-        if (!nama_layanan || !harga) { // Anggap nama layanan dan harga wajib
+        if (!nama_layanan || !harga) { 
             return res.status(400).json({ 
                 success: false, 
                 message: 'Nama layanan dan harga wajib diisi.' 
@@ -27,9 +23,9 @@ const serviceController = {
         try {
             const serviceData = {
                 nama_layanan,
-                deskripsi: deskripsi || null, // Kirim null jika deskripsi kosong
-                harga: parseFloat(harga),       // Pastikan harga adalah angka
-                durasi_menit: durasi_menit ? parseInt(durasi_menit) : null // Kirim null jika durasi kosong, pastikan angka jika ada
+                deskripsi: deskripsi || null, 
+                harga: parseFloat(harga),  
+                durasi_menit: durasi_menit ? parseInt(durasi_menit) : null
             };
 
             const result = await Service.create(serviceData);
@@ -43,7 +39,6 @@ const serviceController = {
 
         } catch (error) {
             console.error('serviceController: Error in createService:', error);
-            // Cek jika error karena duplikasi nama_layanan (jika kamu set UNIQUE di DB)
             if (error.code === 'ER_DUP_ENTRY') {
                 return res.status(409).json({ success: false, message: 'Nama layanan sudah ada. Gunakan nama lain.' });
             }
@@ -55,11 +50,10 @@ const serviceController = {
     },
 
  getAllServices: async (req, res) => {
-        const status = req.query.status; // Ambil parameter 'status' dari query URL (cth: ?status=Aktif)
+        const status = req.query.status;
         console.log(`serviceController: getAllServices called with status query: "${status}"`);
         
         try {
-            // Kirim parameter status ke model. Model akan handle default jika status tidak ada.
             const services = await Service.findAll(status); 
             res.status(200).json({
                 success: true,
@@ -105,11 +99,10 @@ const serviceController = {
     },
 
     updateService: async (req, res) => {
-        const serviceId = req.params.id; // Ambil  dari parameter URL
+        const serviceId = req.params.id; 
         const { nama_layanan, deskripsi, harga, durasi_menit } = req.body;
         console.log(`serviceController: updateService called for ID: ${serviceId} with body:`, req.body);
 
-        // Validasi dasar
         if (!nama_layanan || harga === undefined || harga === null) {
             return res.status(400).json({ 
                 success: false, 
@@ -124,7 +117,6 @@ const serviceController = {
         }
 
         try {
-            // Cek dulu apakah layanan dengan ID tersebut ada
             const existingService = await Service.findById(serviceId);
             if (!existingService) {
                 return res.status(404).json({ success: false, message: 'Layanan yang akan diupdate tidak ditemukan.' });
@@ -147,10 +139,8 @@ const serviceController = {
                 });
                 console.log(`serviceController: Service updated successfully for ID: ${serviceId}`);
             } else {
-                // Ini bisa terjadi jika data yang diinput sama dengan data yang sudah ada, sehingga tidak ada baris yang ter-update,
-                // atau jika layanan dengan ID tersebut tidak ditemukan (meskipun sudah dicek di atas).
-                res.status(200).json({ // Atau bisa juga 304 Not Modified, tapi 200 dengan pesan lebih umum
-                    success: true, // Operasi dianggap sukses karena tidak ada error, meski tidak ada perubahan
+                res.status(200).json({ 
+                    success: true, 
                     message: 'Data layanan tidak berubah atau layanan tidak ditemukan untuk diupdate.',
                     dataUnchanged: true 
                 });
@@ -159,7 +149,6 @@ const serviceController = {
 
         } catch (error) {
             console.error(`serviceController: Error in updateService for ID ${serviceId}:`, error);
-            // Cek jika error karena duplikasi nama_layanan (jika kamu set UNIQUE di DB dan tidak menangani ini di model update)
             if (error.code === 'ER_DUP_ENTRY') {
                 return res.status(409).json({ success: false, message: 'Nama layanan sudah ada. Gunakan nama lain.' });
             }
@@ -175,13 +164,10 @@ const serviceController = {
         console.log(`serviceController: deactivateService called for ID: ${serviceId}`);
 
         try {
-            // Cek dulu apakah layanan dengan ID tersebut ada (opsional, karena UPDATE tidak error jika WHERE tidak match)
-            // Namun, lebih baik untuk memberikan pesan yang lebih spesifik.
             const existingService = await Service.findById(serviceId);
             if (!existingService) {
                 return res.status(404).json({ success: false, message: 'Layanan tidak ditemukan.' });
             }
-            // Pastikan layanan belum nonaktif (jika query di model tidak menangani ini)
             if (existingService.status_layanan === 'Nonaktif') {
                  return res.status(400).json({ success: false, message: 'Layanan ini sudah nonaktif.' });
             }
@@ -195,7 +181,6 @@ const serviceController = {
                 });
                 console.log(`serviceController: Service deactivated successfully for ID: ${serviceId}`);
             } else {
-                // Ini bisa terjadi jika layanan tidak ditemukan oleh query UPDATE di model (misalnya, sudah nonaktif)
                 res.status(404).json({ 
                     success: false, 
                     message: 'Layanan tidak ditemukan atau sudah nonaktif.' 
@@ -216,7 +201,6 @@ const serviceController = {
         console.log(`serviceController: activateService called for ID: ${serviceId}`);
 
         try {
-            // Opsional: Cek dulu apakah layanan ada (findById sudah mengambil status)
             const existingService = await Service.findById(serviceId);
             if (!existingService) {
                 return res.status(404).json({ success: false, message: 'Layanan tidak ditemukan.' });
@@ -234,7 +218,6 @@ const serviceController = {
                 });
                 console.log(`serviceController: Service activated successfully for ID: ${serviceId}`);
             } else {
-                // Ini bisa terjadi jika layanan tidak ditemukan oleh query UPDATE di model (misalnya, sudah aktif)
                 res.status(404).json({ 
                     success: false, 
                     message: 'Layanan tidak ditemukan atau sudah aktif.' 
@@ -249,10 +232,6 @@ const serviceController = {
             });
         }
     },
-
-    // TODO: Nanti tambahkan fungsi controller lain di sini:
-    // updateService: async (req, res) => { ... },
-    // deleteService: async (req, res) => { ... },
 };
 
 module.exports = serviceController;

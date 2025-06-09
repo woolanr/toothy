@@ -1,23 +1,20 @@
 // backend/controllers/userController.js
-const User = require('../models/userModel'); // Ini adalah model yang sudah di-promisify penuh
-const bcrypt = require('bcrypt'); // Diperlukan untuk addUser jika ada password baru
+const User = require('../models/userModel'); 
+const bcrypt = require('bcrypt'); 
 
 const userController = {
-    // Fungsi untuk mendapatkan data ringkasan dashboard Admin
+    // Fungsi untuk data ringkasan dashboard Admin
     getAdminDashboardData: async (req, res) => {
         console.log('userController: getAdminDashboardData called.');
         try {
-            const loggedInUser = req.user; // Data user dari JWT di protect middleware
+            const loggedInUser = req.user; 
 
-            // Ambil data profil admin yang login menggunakan User.findById
             const adminProfile = await User.findById(loggedInUser.id_user); 
-            // Pastikan adminProfile bukan null sebelum mengakses propertinya
             if (!adminProfile) {
                 console.error('userController: Admin profile not found for ID:', loggedInUser.id_user);
                 return res.status(404).json({ message: 'Data profil admin tidak ditemukan.' });
             }
 
-            // Hitung usia dari tanggal_lahir
             let usia = null;
             if (adminProfile.tanggal_lahir) {
                 const birthDate = new Date(adminProfile.tanggal_lahir);
@@ -30,20 +27,19 @@ const userController = {
             }
 
             // --- Bagian untuk mengambil data ringkasan dinamis dari database ---
-            // Menggunakan User model yang sudah di-promisify
-            const allUsers = await User.findAll(); // Mendapatkan semua user dari DB
+            const allUsers = await User.findAll();
             const totalUsers = allUsers.length;
 
             const totalDoctors = allUsers.filter(user => user.id_level_user === 2).length;
             const totalPatients = allUsers.filter(user => user.id_level_user === 4).length;
             const pendingVerifications = allUsers.filter(user => user.id_status_valid === 2).length;
             
-            // Anda bisa tambahkan statistik janji temu hari ini, dll.
-            // const totalAppointmentsToday = await User.countAppointmentsToday(); // Contoh, butuh fungsi di model
+            // Mau nambahin statistik janji temu hari ini, dll.
+            // const totalAppointmentsToday = await User.countAppointmentsToday(); // Contoh, untuk melihat janji temu
 
             res.status(200).json({
                 message: 'Selamat datang di Dashboard Admin Happy Toothy!',
-                user: { // Kirim detail user yang login
+                user: {
                     id_user: loggedInUser.id_user,
                     username: loggedInUser.username,
                     id_level_user: loggedInUser.id_level_user,
@@ -67,7 +63,6 @@ const userController = {
         }
     },
 
-    // Fungsi untuk mendapatkan daftar semua pengguna
     getAllUsers: async (req, res) => {
         console.log('userController: getAllUsers called. Fetching all users from model.');
         try {
@@ -90,19 +85,17 @@ const userController = {
             username,
             email,
             password,
-            no_telepon, // Opsional
+            no_telepon,
             spesialisasi,
             lisensi_no,
             pengalaman_tahun
         } = req.body;
 
-        // 1. Validasi Input Dasar (lakukan validasi yang lebih detail jika perlu)
         if (!nama_lengkap || !username || !email || !password || !spesialisasi || !lisensi_no || pengalaman_tahun === undefined) {
             return res.status(400).json({ success: false, message: 'Semua field wajib diisi: Nama Lengkap, Username, Email, Password, Spesialisasi, No. Lisensi, dan Pengalaman.' });
         }
 
         try {
-            // 2. Cek apakah username atau email sudah ada (opsional tapi direkomendasikan)
             const existingUserByUsername = await User.findByUsername(username);
             if (existingUserByUsername && existingUserByUsername.length > 0) {
                 return res.status(409).json({ success: false, message: 'Username sudah terdaftar. Silakan gunakan username lain.' });
@@ -112,32 +105,28 @@ const userController = {
                 return res.status(409).json({ success: false, message: 'Email sudah terdaftar. Silakan gunakan email lain.' });
             }
 
-            // 3. Hash password sebelum disimpan
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            // 4. Siapkan data untuk dikirim ke model
             const doctorData = {
                 nama_lengkap,
                 username,
                 email,
                 password: hashedPassword,
-                no_telepon: no_telepon || null, // Jika kosong, kirim null
-                id_level_user: 2, // Otomatis set level ke 2 (Dokter)
-                id_status_valid: 1, // Otomatis set status ke 1 (Valid)
+                no_telepon: no_telepon || null,
+                id_level_user: 2, 
+                id_status_valid: 1,
                 
                 // Detail spesifik dokter
                 spesialisasi,
                 lisensi_no,
                 pengalaman_tahun: parseInt(pengalaman_tahun)
             };
-            // 5. Panggil fungsi model untuk membuat user, profile, dan entry dokter
-            // Kita akan buat fungsi User.createFullDoctorWithDetails di userModel.js
             const newDoctor = await User.createFullDoctorWithDetails(doctorData);
 
             res.status(201).json({
                 success: true,
                 message: 'Dokter baru berhasil ditambahkan!',
-                data: { doctorId: newDoctor.newDoctorId, userId: newDoctor.newUserId } // Kirim ID kembali jika perlu
+                data: { doctorId: newDoctor.newDoctorId, userId: newDoctor.newUserId } 
             });
             console.log('userController: createDoctor - Doctor created successfully with UserID:', newDoctor.newUserId, 'and DoctorID:', newDoctor.newDoctorId);
 

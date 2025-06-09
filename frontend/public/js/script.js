@@ -1,6 +1,39 @@
 // frontend/public/js/script.js
 
-// --- Bagian Awal: Fungsi Global (getToken, getAuthHeaders) ---
+let doctorNameElementForSchedule;
+let scheduleForm;
+let scheduleIdInput;
+let doctorIdInputForSchedule;
+let hariDalamMingguInput;
+let waktuMulaiInput;
+let waktuSelesaiInput;
+let isAvailableInput;
+let submitButton;
+let cancelEditButton;
+let schedulesTableBody;
+let formActionTitle;
+let scheduleMessageArea;
+
+// Modal Layanan
+let addServiceModalElement;
+let openAddServiceModalButton;
+let closeServiceModalBtn;
+let cancelServiceModalBtn;
+let addServiceForm;
+let serviceModalTitle;
+let saveServiceBtn;
+let editServiceIdInput;
+
+// Modal Dokter
+let addDoctorModalElement;
+let openAddDoctorModalButton;
+let closeAddDoctorModalBtn;
+let cancelAddDoctorBtn;
+let addDoctorForm;
+let doctorModalTitle; 
+let editDoctorIdInput; 
+
+// --- BAGIAN FUNGSI GLOBAL --- //
 function getToken() {
     const token = localStorage.getItem('token');
     return token;
@@ -16,7 +49,7 @@ function getAuthHeaders() {
 }
 
 
-// --- Fungsi Login, Registrasi, Redirect, Logout, dll. ---
+// --- FUNGSI LOGIN, REGISTRASI, REDIRECT, LOGOUT, DLL. --- //
 async function handleLoginFormSubmit(event) {
     event.preventDefault();
 
@@ -277,7 +310,7 @@ async function handleResetPasswordFormSubmit(event) {
     }
 }
 
-// --- Fungsi Helper Dashboard Admin ---
+// --- FUNGSI HELPER DASHBOARD ADMIN --- //
 function getLevelName(id_level_user) {
     switch (id_level_user) {
         case 1: return 'Admin';
@@ -297,7 +330,7 @@ function getStatusName(id_status_valid) {
     }
 }
 
-// --- Fungsi Fetch Data Dashboard Admin ---
+// --- FUNGSI FETCH DATA DASHBOARD ADMIN --- //
 async function fetchDashboardData() {
     try {
         console.log('script.js (fetchDashboardData): Fetching dashboard data...');
@@ -339,7 +372,7 @@ async function fetchDashboardData() {
     }
 }
 
-// --- Fungsi Manajemen Pengguna (CRUD Users) ---
+// --- ADMIN : FUNGSI MANAJEMEN PENGGUNA --- //
 async function fetchUsers() {
     try {
         console.log('script.js (fetchUsers): Fetching users data...');
@@ -767,7 +800,7 @@ async function handleActivateUser(userId, userName) {
     }
 }
 
-//--- ADMIN: FUNGSI MANAJEMEN DOKTER ---
+//--- ADMIN : FUNGSI MANAJEMEN DOKTER --- //
 async function fetchDoctors() {
     try {
         console.log('script.js (fetchDoctors): Fetching doctors data...');
@@ -839,9 +872,12 @@ function populateDoctorTable(doctors) {
                 <td>${doctor.no_telepon || '-'}</td>
                 <td>${doctor.lisensi_no || '-'}</td>
                 <td>${doctor.pengalaman_tahun !== null ? doctor.pengalaman_tahun : '-'}</td>
-                <td class="user-actions"> 
+                <td class="user-actions">
                     <button class="btn btn-sm btn-edit edit-btn" data-id="${doctor.id_doctor}">Edit</button>
                     <button class="btn btn-sm btn-danger delete-btn" data-id="${doctor.id_doctor}">Hapus</button>
+                </td>
+                <td class="user-actions">
+                <button class="btn btn-sm btn-info manage-schedule-btn" onclick="window.showDoctorSchedules('${doctor.id_doctor}')">Kelola Jadwal</button>
                 </td>
             `;
             row.innerHTML = rowHTML;
@@ -954,11 +990,7 @@ async function handleDeactivateDoctor(doctorId, userId, doctorName) {
 }
 
 
-// --- ADMIN : MANAJEMEN LAYANAN --- 
-
-let addServiceModalElement, openAddServiceModalButton, closeServiceModalBtn, 
-    cancelServiceModalBtn, addServiceForm, serviceModalTitle, 
-    saveServiceBtn, editServiceIdInput;
+// --- ADMIN : MANAJEMEN LAYANAN --- //
 
 async function fetchServices(status = 'Aktif') {
     try {
@@ -1162,8 +1194,7 @@ async function handleActivateService(serviceId, serviceName) { // Untuk mengakti
     }
 }
 
-
-// --- Fungsi untuk Pasien Dashboard & Booking ---
+// --- ADMIN : FUNGSI PASIEN DASHBOARD & BOOKING --- //
 async function fetchPatientDashboardData() {
     try {
         console.log('script.js (fetchPatientDashboardData): Fetching patient dashboard data...');
@@ -1426,9 +1457,304 @@ async function handleNewAppointmentFormSubmit(event) {
     }
 }
 
+// --- FUNGSI MANAJEMEN JADWAL DOKTER --- //
+function displayScheduleMessage(message, type) {
+    console.log(`displayScheduleMessage called. Message: "${message}", Type: "${type}". scheduleMessageArea element:`, scheduleMessageArea);
+
+    if (!scheduleMessageArea) {
+        console.warn('Element #schedule-message-area not found.');
+        return;
+    }
+    scheduleMessageArea.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    scheduleMessageArea.style.display = 'block';
+    setTimeout(() => {
+        scheduleMessageArea.style.display = 'none';
+        scheduleMessageArea.innerHTML = '';
+    }, 5000);
+}
+
+function getDayName(dayNumber) {
+    const days = {
+        1: 'Minggu',
+        2: 'Senin',
+        3: 'Selasa',
+        4: 'Rabu',
+        5: 'Kamis',
+        6: 'Jumat',
+        7: 'Sabtu'
+    };
+    return days[dayNumber] || 'Tidak Diketahui';
+}
+
+function renderSchedules(schedules) {
+    console.log("renderSchedules called with schedules:", schedules);
+
+    if (!schedulesTableBody) {
+        console.error("renderSchedules: Element with ID 'schedules-table-body' not found.");
+        return;
+    }
+    schedulesTableBody.innerHTML = ''; // Bersihkan tabel
+    if (schedules.length === 0) {
+        schedulesTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Belum ada jadwal tersedia untuk dokter ini.</td></tr>';
+        return;
+    }
+
+    schedules.forEach(schedule => {
+        const row = schedulesTableBody.insertRow();
+        row.innerHTML = `
+            <td>${getDayName(schedule.hari_dalam_minggu)}</td>
+            <td>${schedule.waktu_mulai}</td>
+            <td>${schedule.waktu_selesai}</td>
+            <td>${schedule.is_available ? 'Tersedia' : 'Tidak Tersedia'}</td>
+            <td>
+                <button class="btn btn-sm btn-edit-schedule" data-id="${schedule.id_schedule}">Edit</button>
+                <button class="btn btn-sm btn-delete-schedule" data-id="${schedule.id_schedule}">Hapus</button>
+            </td>
+        `;
+    });
+
+    document.querySelectorAll('.btn-edit-schedule').forEach(button => {
+        button.addEventListener('click', (e) => handleEditSchedule(e.target.dataset.id));
+    });
+    document.querySelectorAll('.btn-delete-schedule').forEach(button => {
+        button.addEventListener('click', (e) => handleDeleteSchedule(e.target.dataset.id));
+    });
+}
+
+function resetFormForAdd() {
+    console.log("resetFormForAdd dipanggil: Mereset form jadwal ke kondisi awal.");
+
+    if (scheduleForm) {
+        scheduleForm.reset();
+    }
+
+    if (scheduleIdInput) {
+        scheduleIdInput.value = '';
+    }
+
+    if (formActionTitle) {
+        formActionTitle.textContent = 'Tambah';
+    }
+
+    if (submitButton) {
+        submitButton.textContent = 'Tambah Jadwal';
+    }
+
+    if (cancelEditButton) {
+        cancelEditButton.style.display = 'none';
+    }
+    
+    if (isAvailableInput) {
+        isAvailableInput.checked = true;
+    }
+}
+
+// Fungsi untuk memuat UI jadwal dokter (nama dokter & daftar jadwal)
+window.loadDoctorSchedulesUI = async (doctorId) => {
+    console.log(`loadDoctorSchedulesUI dipanggil untuk Doctor ID: ${doctorId}`);
+
+    const fieldset = document.getElementById('schedule-fieldset');
+    const instructionText = document.getElementById('schedule-form-instruction');
+
+    if (!doctorNameElementForSchedule || !doctorIdInputForSchedule || !schedulesTableBody || !fieldset || !instructionText) {
+        console.error('Satu atau lebih elemen UI untuk manajemen jadwal tidak ditemukan. Proses dibatalkan.');
+        alert('Terjadi kesalahan pada UI. Harap segarkan halaman.');
+        return;
+    }
+
+    fieldset.disabled = true; // Nonaktifkan form untuk mencegah input saat loading
+    instructionText.style.display = 'block'; // Tampilkan kembali teks instruksi
+    instructionText.textContent = 'Memuat data dokter...';
+    doctorNameElementForSchedule.textContent = '(Memuat...)';
+    schedulesTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Memuat jadwal...</td></tr>';
+
+    resetFormForAdd();
+
+    doctorIdInputForSchedule.value = doctorId;
+
+    try {
+        const doctorResponse = await fetch(`/admin/doctors/${doctorId}`, { headers: getAuthHeaders() });
+        const doctorData = await doctorResponse.json();
+
+        if (doctorResponse.ok && doctorData.success && doctorData.data) {
+            doctorNameElementForSchedule.textContent = doctorData.data.nama_lengkap;
+            instructionText.style.display = 'none'; // Sembunyikan instruksi karena form sudah aktif
+            fieldset.disabled = false; // AKTIFKAN FORM!
+        } else {
+            const errorMessage = doctorData.message || 'Dokter tidak ditemukan.';
+            doctorNameElementForSchedule.textContent = '(Error)';
+            instructionText.textContent = `Gagal memuat data: ${errorMessage}`;
+            console.error('Gagal mengambil data dokter:', errorMessage);
+            return; // Hentikan proses jika data dokter tidak ditemukan
+        }
+    } catch (error) {
+        doctorNameElementForSchedule.textContent = '(Error Koneksi)';
+        instructionText.textContent = 'Terjadi kesalahan koneksi saat mengambil data dokter.';
+        console.error('Error koneksi saat fetch data dokter:', error);
+        return; // Hentikan proses jika terjadi error koneksi
+    }
+
+    try {
+        const schedulesResponse = await fetch(`/admin/doctors/${doctorId}/schedules`, { headers: getAuthHeaders() });
+        const schedulesData = await schedulesResponse.json();
+
+        if (schedulesResponse.ok && schedulesData.success) {
+            // Jika berhasil, render jadwal ke dalam tabel
+            renderSchedules(schedulesData.data);
+        } else {
+            // Jika gagal, tampilkan pesan error di tabel
+            const errorMessage = schedulesData.message || 'Gagal memuat jadwal.';
+            schedulesTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Error: ${errorMessage}</td></tr>`;
+            console.error('Gagal mengambil jadwal dokter:', errorMessage);
+        }
+    } catch (error) {
+        schedulesTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Terjadi kesalahan koneksi saat memuat jadwal.</td></tr>';
+        console.error('Error koneksi saat fetch jadwal dokter:', error);
+    }
+};
+
+console.log("Checking scheduleForm element:", scheduleForm);
+if (scheduleForm) {
+    console.log("scheduleForm event listener attached.");
+    scheduleForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log("scheduleForm submitted.");
+
+        const scheduleId = scheduleIdInput.value;
+        const url = scheduleId ? `/admin/schedules/${scheduleId}` : '/admin/schedules';
+        const method = scheduleId ? 'PUT' : 'POST';
+
+        const scheduleData = {
+            id_doctor: parseInt(doctorIdInputForSchedule.value),
+            hari_dalam_minggu: parseInt(hariDalamMingguInput.value),
+            waktu_mulai: waktuMulaiInput.value,
+            waktu_selesai: waktuSelesaiInput.value,
+            is_available: isAvailableInput.checked ? 1 : 0
+        };
+        console.log("Data to send for schedule (from frontend):", scheduleData);
+        console.log("Type of scheduleData.id_doctor:", typeof scheduleData.id_doctor, "Value:", scheduleData.id_doctor);
+        if (isNaN(scheduleData.id_doctor)) {
+            console.error("ERROR: scheduleData.id_doctor is NaN. This means doctorIdInputForSchedule.value was not a valid number or was empty.");
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: getAuthHeaders(),
+                body: JSON.stringify(scheduleData)
+            });
+            const data = await response.json();
+
+            console.log('API Response for schedule submission:', data);
+            console.log('API Response status:', response.status);
+
+            if (response.ok && data.success) {
+                displayScheduleMessage(data.message, 'success');
+                resetFormForAdd(); // Reset form setelah sukses
+                window.loadDoctorSchedulesUI(doctorIdInputForSchedule.value); // Muat ulang jadwal untuk dokter saat ini
+            } else {
+                console.error(`Gagal ${scheduleId ? 'memperbarui' : 'menambahkan'} jadwal. Backend message:`, data.message);
+                displayScheduleMessage(`Gagal ${scheduleId ? 'memperbarui' : 'menambahkan'} jadwal: ${data.message}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error submitting schedule:', error);
+            displayScheduleMessage(`Terjadi kesalahan saat ${scheduleId ? 'memperbarui' : 'menambahkan'} jadwal.`, 'error');
+        }
+    });
+}
+
+
+// Fungsi untuk mode Edit Jadwal
+async function handleEditSchedule(id) {
+    try {
+        const response = await fetch(`/admin/schedules/${id}`, { headers: getAuthHeaders() });
+        const data = await response.json();
+
+        if (response.ok && data.success && data.data) {
+            const schedule = data.data;
+            scheduleIdInput.value = schedule.id_schedule;
+            hariDalamMingguInput.value = schedule.hari_dalam_minggu;
+            waktuMulaiInput.value = schedule.waktu_mulai;
+            waktuSelesaiInput.value = schedule.waktu_selesai;
+            isAvailableInput.checked = schedule.is_available === 1;
+
+            formActionTitle.textContent = 'Edit';
+            submitButton.textContent = 'Perbarui Jadwal';
+            if (cancelEditButton) cancelEditButton.style.display = 'inline-block';
+        } else {
+            displayScheduleMessage(`Gagal memuat jadwal untuk diedit: ${data.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error fetching schedule for edit:', error);
+        displayScheduleMessage('Terjadi kesalahan saat memuat jadwal untuk diedit.', 'error');
+    }
+}
+
+async function handleDeleteSchedule(id) {
+    if (!confirm('Apakah Anda yakin ingin menghapus jadwal ini?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/admin/schedules/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            displayScheduleMessage(data.message, 'success');
+            window.loadDoctorSchedulesUI(doctorIdInputForSchedule.value); // Muat ulang jadwal
+        } else {
+            displayScheduleMessage(`Gagal menghapus jadwal: ${data.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting schedule:', error);
+        displayScheduleMessage('Terjadi kesalahan saat menghapus jadwal.', 'error');
+    }
+}
+
+console.log("Checking cancelEditButton element:", cancelEditButton);
+if (cancelEditButton) {
+    cancelEditButton.addEventListener('click', resetFormForAdd);
+}
+
+
+
 // --- Event listener utama untuk DOMContentLoaded ---
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM fully loaded and parsed');
+
+    // --- Inisiasi Variabel Elemen UI Manajemen Jadwal Dokter --- //
+    doctorNameElementForSchedule = document.getElementById('doctor-name-for-schedule');
+    scheduleForm = document.getElementById('schedule-form');
+    scheduleIdInput = document.getElementById('schedule-id');
+    doctorIdInputForSchedule = document.getElementById('doctor-id-for-schedule');
+    hariDalamMingguInput = document.getElementById('hari_dalam_minggu');
+    waktuMulaiInput = document.getElementById('waktu_mulai');
+    waktuSelesaiInput = document.getElementById('waktu_selesai');
+    isAvailableInput = document.getElementById('is_available');
+    submitButton = document.getElementById('submit-button');
+    cancelEditButton = document.getElementById('cancel-edit-button');
+    schedulesTableBody = document.getElementById('schedules-table-body');
+    formActionTitle = document.getElementById('form-action-title');
+    scheduleMessageArea = document.getElementById('schedule-message-area');
+
+    console.log('Manajemen Jadwal Dokter UI Elements Initialized (at DOMContentLoaded):', {
+        doctorNameElementForSchedule: !!doctorNameElementForSchedule,
+        scheduleForm: !!scheduleForm,
+        scheduleIdInput: !!scheduleIdInput,
+        doctorIdInputForSchedule: !!doctorIdInputForSchedule,
+        hariDalamMingguInput: !!hariDalamMingguInput,
+        waktuMulaiInput: !!waktuMulaiInput,
+        waktuSelesaiInput: !!waktuSelesaiInput,
+        isAvailableInput: !!isAvailableInput,
+        submitButton: !!submitButton,
+        cancelEditButton: !!cancelEditButton,
+        schedulesTableBody: !!schedulesTableBody,
+        formActionTitle: !!formActionTitle,
+        scheduleMessageArea: !!scheduleMessageArea
+    });
 
     // --- Inisialisasi Variabel Elemen Modal Layanan ---
     addServiceModalElement = document.getElementById('addServiceModal');
@@ -1440,11 +1766,95 @@ document.addEventListener('DOMContentLoaded', async () => {
     saveServiceBtn = document.getElementById('saveServiceBtn');
     editServiceIdInput = document.getElementById('editServiceId'); 
     
-    console.log('Service Modal Elements Initialized:', { 
-        addServiceModalElement, openAddServiceModalButton, closeServiceModalBtn,
-        cancelServiceModalBtn, addServiceForm, serviceModalTitle,
-        saveServiceBtn, editServiceIdInput
+    console.log('Service Modal Elements Initialized (at DOMContentLoaded):', {
+        addServiceModalElement: !!addServiceModalElement,
+        openAddServiceModalButton: !!openAddServiceModalButton,
+        closeServiceModalBtn: !!closeServiceModalBtn,
+        cancelServiceModalBtn: !!cancelServiceModalBtn,
+        addServiceForm: !!addServiceForm,
+        serviceModalTitle: !!serviceModalTitle,
+        saveServiceBtn: !!saveServiceBtn,
+        editServiceIdInput: !!editServiceIdInput
     });
+
+    // Inisialisasi variabel-variabel untuk Modal Dokter
+    addDoctorModalElement = document.getElementById('addDoctorModal');
+    openAddDoctorModalButton = document.getElementById('openAddDoctorModalButton');
+    closeAddDoctorModalBtn = document.getElementById('closeAddDoctorModalBtn');
+    cancelAddDoctorBtn = document.getElementById('cancelAddDoctorBtn');
+    addDoctorForm = document.getElementById('addDoctorForm');
+    doctorModalTitle = document.getElementById('doctorModalTitle');
+    editDoctorIdInput = document.getElementById('editDoctorId');
+    
+    console.log('Doctor Modal Elements Initialized (at DOMContentLoaded):', {
+        addDoctorModalElement: !!addDoctorModalElement,
+        openAddDoctorModalButton: !!openAddDoctorModalButton,
+        closeAddDoctorModalBtn: !!closeAddDoctorModalBtn,
+        cancelAddDoctorBtn: !!cancelAddDoctorBtn,
+        addDoctorForm: !!addDoctorForm,
+        doctorModalTitle: !!doctorModalTitle,
+        editDoctorIdInput: !!editDoctorIdInput
+    });
+
+    // Event listener untuk tombol Batal Edit Jadwal
+    if (cancelEditButton) {
+        cancelEditButton.addEventListener('click', resetFormForAdd);
+        console.log('Event listener for cancelEditButton attached.');
+    } else {
+        console.warn('cancelEditButton element not found, skipping event listener attachment.');
+    }
+
+    // Event listener untuk form submit jadwal
+    if (scheduleForm) {
+        scheduleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log("scheduleForm submitted from DOMContentLoaded listener.");
+
+            const scheduleId = scheduleIdInput.value;
+            const url = scheduleId ? `/admin/schedules/${scheduleId}` : '/admin/schedules';
+            const method = scheduleId ? 'PUT' : 'POST';
+
+            const scheduleData = {
+                id_doctor: parseInt(doctorIdInputForSchedule.value),
+                hari_dalam_minggu: parseInt(hariDalamMingguInput.value),
+                waktu_mulai: waktuMulaiInput.value,
+                waktu_selesai: waktuSelesaiInput.value,
+                is_available: isAvailableInput.checked ? 1 : 0
+            };
+            console.log("Data to send for schedule (from frontend, after DOMContentLoaded listener):", scheduleData);
+            console.log("Type of scheduleData.id_doctor:", typeof scheduleData.id_doctor, "Value:", scheduleData.id_doctor);
+            if (isNaN(scheduleData.id_doctor)) {
+                console.error("ERROR: scheduleData.id_doctor is NaN. This means doctorIdInputForSchedule.value was not a valid number or was empty.");
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(scheduleData)
+                });
+                const data = await response.json();
+
+                console.log('API Response for schedule submission (from DOMContentLoaded listener):', data);
+                console.log('API Response status:', response.status);
+
+                if (response.ok && data.success) {
+                    displayScheduleMessage(data.message, 'success');
+                    resetFormForAdd();
+                    window.loadDoctorSchedulesUI(doctorIdInputForSchedule.value);
+                } else {
+                    console.error(`Gagal ${scheduleId ? 'memperbarui' : 'menambahkan'} jadwal. Backend message:`, data.message);
+                    displayScheduleMessage(`Gagal ${scheduleId ? 'memperbarui' : 'menambahkan'} jadwal: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting schedule:', error);
+                displayScheduleMessage(`Terjadi kesalahan saat ${scheduleId ? 'memperbarui' : 'menambahkan'} jadwal.`, 'error');
+            }
+        });
+        console.log('Event listener for scheduleForm attached.');
+    } else {
+        console.warn('scheduleForm element not found, skipping event listener attachment.');
+    }
 
     // --- Event Listener untuk Modal Layanan ---
     if (openAddServiceModalButton && addServiceModalElement && addServiceForm) {
@@ -1540,10 +1950,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('Terjadi kesalahan saat menghubungi server.');
             }
         });
-    } else {
-        if (window.location.pathname === '/admin/dashboard') {
-            console.warn("Form 'addServiceForm' tidak ditemukan di /admin/dashboard.");
-        }
     }
 
     // --- Event Listener untuk Filter Status Layanan ---
@@ -1555,7 +1961,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (typeof fetchServices === 'function') fetchServices(selectedStatus);
         });
     }
-
 
     // --- Event Listener untuk Form Profil Pasien ---
     const patientProfileForm = document.getElementById('patientProfileForm');
@@ -1596,7 +2001,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-
     // --- Inisialisasi Event Listeners untuk Formulir Lain (Login, Register, dll.) ---
     const loginForm = document.querySelector('#loginForm');
     if (loginForm) loginForm.addEventListener('submit', handleLoginFormSubmit);
@@ -1616,11 +2020,52 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resetPasswordForm = document.querySelector('#resetPasswordForm');
     if (resetPasswordForm) resetPasswordForm.addEventListener('submit', handleResetPasswordFormSubmit);
     
-    // Event listener untuk form Tambah Pengguna (dari section add-user di dashboard admin)
-    const addUserForm = document.getElementById('addUserForm'); // Ini ada di dashboard.ejs admin
+    // Event listener untuk form Tambah Pengguna (dashboard admin)
+    const addUserForm = document.getElementById('addUserForm');
     if (addUserForm) {
-        addUserForm.addEventListener('submit', async (event) => { /* ... kode submit addUserForm kamu ... */ });
-    }
+        addUserForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            console.log('addUserForm submitted.');
+            const nama_lengkap = document.getElementById('addUser_nama_lengkap').value;
+            const email = document.getElementById('addUser_email').value;
+            const username = document.getElementById('addUser_username').value;
+            const password = document.getElementById('addUser_password').value;
+            const id_level_user = document.getElementById('addUser_id_level_user').value; 
+            if (!nama_lengkap || !email || !username || !password || !id_level_user) {
+                alert('Mohon isi semua field yang wajib diisi.');
+                return;
+            }
+
+            const userData = {
+                nama_lengkap,
+                email,
+                username,
+                password,
+                id_level_user: parseInt(id_level_user)
+            };
+
+            try {
+                const response = await fetch('/admin/users', { 
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(userData)
+                });
+                const result = await response.json();
+                if (response.ok && result.message) {
+                    alert(result.message);
+                    addUserForm.reset();
+                    if (typeof fetchUsers === 'function') {
+                        fetchUsers(); 
+                    }
+                } else {
+                        alert(result.message || 'Gagal menambahkan pengguna baru.');
+                    }
+                } catch (error) {
+                    console.error('Error adding new user:', error);
+                    alert('Terjadi kesalahan saat menambahkan pengguna. Cek konsol untuk detail.');
+                }
+            });
+        }
 
     // --- Event listener untuk tombol Logout Global ---
     const globalLogoutButton = document.getElementById('logoutButton'); 
@@ -1631,6 +2076,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '/login';
         });
     }
+
     // Event listener untuk tombol Logout Pasien (jika ID-nya patientLogoutBtn dan berbeda)
     const patientLogoutBtn = document.getElementById('patientLogoutBtn');
     if(patientLogoutBtn) {
@@ -1640,7 +2086,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '/login'; 
         });
     }
-
 
     // --- Panggilan Fungsi Dashboard Awal ---
     const currentPath = window.location.pathname;
@@ -1656,9 +2101,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '/login';
             return; 
         }
-        // Pemanggilan data awal untuk admin dashboard akan dihandle oleh
-        // inline script di dashboard.ejs yang memanggil showSection untuk section default (misalnya 'overview-section'),
-        // yang kemudian akan memicu fetchDashboardData() atau fetch lainnya yang relevan.
         console.log('Admin dashboard initial data will be fetched by showSection logic in dashboard.ejs.');
     } else if (currentPath === '/pasien/dashboard') {
         console.log('script.js (DOMContentLoaded): On patient dashboard page.');
@@ -1688,7 +2130,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (appointmentDateElement) {
             appointmentDateElement.addEventListener('change', loadAvailableDoctorSlots);
-            // appointmentDateElement.min = new Date().toISOString().split('T')[0]; // Uncomment jika belum di HTML
         }
     } else {
         console.log('script.js (DOMContentLoaded): Not on admin or patient dashboard. Skipping specific initial data fetch.');
