@@ -133,6 +133,10 @@
             </section>
 
             <section class="content-section hidden" id="user-list-section">
+                <div class="section-header">
+                    <h2>Daftar Pengguna</h2>
+                    <button class="btn btn-primary" id="addUserBtnOnList"><i class="fas fa-plus"></i> Tambah Pengguna Baru</button>
+                </div>
                 <div class="filter-controls">
                     <input type="text" id="userSearch" placeholder="Cari pengguna...">
                     <select id="userLevelFilter">
@@ -148,7 +152,6 @@
                         <option value="2">Belum Valid</option>
                         <option value="3">Keluar</option>
                     </select>
-                    <button class="btn btn-primary" id="addUserBtnOnList"><i class="fas fa-plus"></i> Tambah Pengguna Baru</button>
                 </div>
                 <div class="data-table-container card">
                     <table class="data-table">
@@ -172,6 +175,9 @@
             </section>
             
             <section class="content-section hidden" id="add-user-section">
+                <div class="section-header">
+                    <h2>Tambah Pengguna Baru</h2>
+                </div>
                 <div class="auth-container card" style="max-width: 600px; margin: 20px auto;">
                     <form id="addUserForm" class="auth-form">
                         <div class="form-group">
@@ -207,8 +213,11 @@
             </section>
 
             <section class="content-section hidden" id="doctor-list-section">
-                <div class="data-table-container card">
+                <div class="section-header">
+                    <h2>Manajemen Dokter</h2>
                     <button class="btn btn-primary" id="openAddDoctorModalButton"><i class="fas fa-plus"></i> Tambah Dokter Baru</button>
+                </div>
+                <div class="data-table-container card">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -232,11 +241,15 @@
             </section>
             
             <section class="content-section hidden" id="doctor-schedules-management-section">
+                <div class="section-header">
+                    <h2>Manajemen Jadwal untuk: <span id="doctor-name-for-schedule">(Pilih Dokter dari Daftar)</span></h2>
+                    <button class="btn btn-secondary" id="backToDoctorListBtn"><i class="fas fa-arrow-left"></i> Kembali ke Daftar Dokter</button>
+                </div>
                 <div class="card-deck">
                     <div class="card form-card">
                         <h4><span id="form-action-title">Tambah</span> Jadwal Baru</h4>
                         <p class="text-muted" id="schedule-form-instruction">
-                            <i>Pilih dokter dari daftar untuk dapat menambahkan atau mengedit jadwal.</i>
+                            <i>Pilih seorang dokter dari daftar untuk dapat menambahkan atau mengedit jadwal.</i>
                         </p>
                         <fieldset id="schedule-fieldset" disabled>
                             <form id="schedule-form">
@@ -298,6 +311,10 @@
             </section>
 
             <section class="content-section hidden" id="service-management-section">
+                <div class="section-header">
+                    <h2>Manajemen Layanan</h2>
+                    <button class="btn btn-primary" id="openAddServiceModalButton"><i class="fas fa-plus"></i> Tambah Layanan Baru</button>
+                </div>
                 <div class="filter-controls">
                     <label for="serviceStatusFilter">Filter Status:</label>
                     <select id="serviceStatusFilter">
