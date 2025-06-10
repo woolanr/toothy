@@ -133,10 +133,6 @@
             </section>
 
             <section class="content-section hidden" id="user-list-section">
-                <div class="section-header">
-                    <h2>Daftar Pengguna</h2>
-                    <button class="btn btn-primary" id="addUserBtnOnList"><i class="fas fa-plus"></i> Tambah Pengguna Baru</button>
-                </div>
                 <div class="filter-controls">
                     <input type="text" id="userSearch" placeholder="Cari pengguna...">
                     <select id="userLevelFilter">
@@ -152,6 +148,7 @@
                         <option value="2">Belum Valid</option>
                         <option value="3">Keluar</option>
                     </select>
+                    <button class="btn btn-primary" id="addUserBtnOnList"><i class="fas fa-plus"></i> Tambah Pengguna Baru</button>
                 </div>
                 <div class="data-table-container card">
                     <table class="data-table">
@@ -175,9 +172,6 @@
             </section>
             
             <section class="content-section hidden" id="add-user-section">
-                <div class="section-header">
-                    <h2>Tambah Pengguna Baru</h2>
-                </div>
                 <div class="auth-container card" style="max-width: 600px; margin: 20px auto;">
                     <form id="addUserForm" class="auth-form">
                         <div class="form-group">
@@ -214,7 +208,6 @@
 
             <section class="content-section hidden" id="doctor-list-section">
                 <div class="section-header">
-                    <h2>Manajemen Dokter</h2>
                     <button class="btn btn-primary" id="openAddDoctorModalButton"><i class="fas fa-plus"></i> Tambah Dokter Baru</button>
                 </div>
                 <div class="data-table-container card">
@@ -311,10 +304,6 @@
             </section>
 
             <section class="content-section hidden" id="service-management-section">
-                <div class="section-header">
-                    <h2>Manajemen Layanan</h2>
-                    <button class="btn btn-primary" id="openAddServiceModalButton"><i class="fas fa-plus"></i> Tambah Layanan Baru</button>
-                </div>
                 <div class="filter-controls">
                     <label for="serviceStatusFilter">Filter Status:</label>
                     <select id="serviceStatusFilter">
@@ -322,6 +311,7 @@
                         <option value="Nonaktif">Nonaktif</option>
                         <option value="Semua">Semua</option>
                     </select>
+                    <button class="btn btn-primary" id="openAddServiceModalButton"><i class="fas fa-plus"></i> Tambah Layanan Baru</button>
                 </div>
                 <div class="data-table-container card">
                     <table class="data-table">
@@ -344,14 +334,65 @@
             </section>
 
             <section class="content-section hidden" id="clinic-settings-section">
-                <div class="section-header">
-                    <h2>Pengaturan Klinik</h2>
+                <div class="card settings-card">
+                    <h4>Informasi Umum Klinik</h4>
+                    <form id="generalSettingsForm">
+                        <div class="form-group">
+                            <label for="setting_clinic_name">Nama Klinik:</label>
+                            <input type="text" id="setting_clinic_name" name="clinic_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="setting_clinic_address">Alamat:</label>
+                            <textarea id="setting_clinic_address" name="clinic_address" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="setting_clinic_phone">No. Telepon:</label>
+                            <input type="tel" id="setting_clinic_phone" name="clinic_phone">
+                        </div>
+                        <div class="form-group">
+                            <label for="setting_clinic_email">Email Kontak:</label>
+                            <input type="email" id="setting_clinic_email" name="clinic_email">
+                        </div>
+                        <div class="form-group">
+                            <label for="setting_clinic_logo_url">URL Logo Klinik:</label>
+                            <input type="url" id="setting_clinic_logo_url" name="clinic_logo_url">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Simpan Informasi Umum</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="card">
-                    <p>Konten untuk pengaturan umum klinik akan ditampilkan di sini.</p>
-                </div>
-            </section>
 
+                <div class="card settings-card">
+                    <h4>Pengaturan Janji Temu & Sistem</h4>
+                    <form id="systemSettingsForm">
+                        <div class="form-group">
+                            <label for="setting_default_slot_duration">Durasi Slot Default (menit):</label>
+                            <input type="number" id="setting_default_slot_duration" name="default_slot_duration" min="15" step="5" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="setting_buffer_time">Waktu Buffer Antar Janji (menit):</label>
+                            <input type="number" id="setting_buffer_time" name="buffer_time" min="0" step="5" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="setting_min_booking_lead_time_hours">Min. Booking Waktu Muka (jam):</label>
+                            <input type="number" id="setting_min_booking_lead_time_hours" name="min_booking_lead_time_hours" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="setting_max_booking_ahead_days">Max. Booking Ke Depan (hari):</label>
+                            <input type="number" id="setting_max_booking_ahead_days" name="max_booking_ahead_days" min="1" required>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="setting_require_email_verification" name="require_email_verification">
+                            <label for="setting_require_email_verification">Verifikasi Email Pasien Baru</label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Simpan Pengaturan Sistem</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="clinic-settings-message-area" class="message-area"></div>
+            </section>
         </main>
     </div>
 
@@ -443,6 +484,8 @@
 
     <script src="/js/script.js"></script>
     <script>
+
+
     document.addEventListener('DOMContentLoaded', () => {
         // Elemen-elemen utama
         const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
@@ -453,12 +496,10 @@
         function showSection(sectionIdToShow, paramId = null) {
             console.log(`showSection dipanggil untuk: ${sectionIdToShow}, dengan ID parameter: ${paramId}`);
             
-            // Sembunyikan semua section
             contentSections.forEach(section => {
                 section.classList.add('hidden');
             });
 
-            // Tampilkan section yang diminta
             const currentSectionElement = document.getElementById(sectionIdToShow);
             if (currentSectionElement) {
                 currentSectionElement.classList.remove('hidden');
@@ -466,7 +507,6 @@
                 loadSectionData(sectionIdToShow, paramId);
             } else {
                 console.warn(`showSection: Section dengan ID '${sectionIdToShow}' tidak ditemukan.`);
-                // Tampilkan overview sebagai default jika section tidak ditemukan
                 document.getElementById('overview-section').classList.remove('hidden');
                 updatePageTitle('overview-section');
             }
@@ -502,11 +542,16 @@
                     }
                     document.getElementById('schedules-table-body').innerHTML = '<tr><td colspan="5" class="text-center">Pilih dokter dari daftar untuk mengelola jadwalnya.</td></tr>';
                     
-                    // Jika ada ID dokter yang diberikan (dari tombol "Kelola Jadwal"), muat datanya
                     if (paramId && typeof window.loadDoctorSchedulesUI === 'function') {
                         window.loadDoctorSchedulesUI(paramId);
-                         // Navigasi ke bagian paling atas dari halaman
                         window.scrollTo(0, 0);
+                    }
+                    break;
+                case 'clinic-settings-section':
+                    if (typeof window.fetchClinicSettings === 'function') {
+                        window.fetchClinicSettings(); 
+                    } else {
+                        console.error('fetchClinicSettings function is not defined!');
                     }
                     break;
             }
@@ -518,9 +563,7 @@
             const activeLink = document.querySelector(`.nav-item[data-section="${sectionId.replace('-section', '')}"] > a, .submenu li[data-subsection="${sectionId.replace('-section', '')}"] > a`);
             
             if (activeLink) {
-                // Kloning node untuk memanipulasi tanpa mengubah DOM asli
                 const linkClone = activeLink.cloneNode(true);
-                // Hapus ikon chevron jika ada
                 const chevron = linkClone.querySelector('.submenu-icon');
                 if (chevron) chevron.remove();
                 titleText = linkClone.textContent.trim();
@@ -540,15 +583,12 @@
             const parentNavItem = item.closest('.nav-item');
             
             if (parentNavItem.classList.contains('has-submenu') && !isSubmenu) {
-                // Klik pada menu utama yang punya submenu
                 parentNavItem.classList.toggle('active');
                 parentNavItem.querySelector('.submenu').classList.toggle('active');
             } else {
-                // Klik pada menu biasa atau submenu item
                 const sectionOrSubsectionId = isSubmenu ? item.dataset.subsection : parentNavItem.dataset.section;
                 showSection(sectionOrSubsectionId + '-section');
                 
-                // Atur status 'active'
                 document.querySelectorAll('.nav-item, .submenu > li').forEach(el => el.classList.remove('active', 'active-submenu-item'));
                 parentNavItem.classList.add('active');
                 if(isSubmenu) {
@@ -559,7 +599,6 @@
         }
 
         navItems.forEach(item => {
-            // Event listener untuk menu utama dan submenu
             item.querySelectorAll('a').forEach(link => {
                 const liParent = link.closest('li');
                 link.addEventListener('click', (e) => handleMenuClick(e, liParent));
@@ -586,14 +625,11 @@
             });
         }
 
-        // Fungsi global untuk dipanggil dari tombol "Kelola Jadwal" di script.js
         window.showDoctorSchedules = (doctorId) => {
             const schedulesSubmenuItem = document.querySelector('.submenu li[data-subsection="doctor-schedules-management"]');
             if(schedulesSubmenuItem) {
-                // Simulasikan klik untuk navigasi dan kirim ID dokter
                 showSection('doctor-schedules-management-section', doctorId);
                 
-                // Atur status 'active' secara manual
                 document.querySelectorAll('.nav-item, .submenu > li').forEach(el => el.classList.remove('active', 'active-submenu-item'));
                 const parentNavItem = schedulesSubmenuItem.closest('.nav-item');
                 parentNavItem.classList.add('active');
@@ -603,13 +639,11 @@
         };
 
         // --- INISIALISASI HALAMAN ---
-        // Cek jika URL secara spesifik menargetkan jadwal dokter
         const pathSegments = window.location.pathname.split('/');
         if (pathSegments[1] === 'admin' && pathSegments[2] === 'doctors' && pathSegments[3] && pathSegments[4] === 'schedules') {
             const initialDoctorId = pathSegments[3];
             window.showDoctorSchedules(initialDoctorId);
         } else {
-            // Tampilkan section default (yang memiliki class 'active' di HTML)
             const initialActiveItem = document.querySelector('.sidebar-nav .nav-item.active');
             showSection(initialActiveItem.dataset.section + '-section');
         }

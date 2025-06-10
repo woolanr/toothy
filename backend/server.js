@@ -75,7 +75,7 @@ app.get('/pasien/dashboard', (req, res) => {
 });
 
 app.use('/', authRoutes);
-app.use('/', adminRoutes);
+app.use('/admin', adminRoutes);
 app.use('/pasien', pasienRoutes);
 
 app.use((req, res, next) => {

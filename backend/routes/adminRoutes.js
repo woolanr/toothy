@@ -1,78 +1,66 @@
 // backend/routes/adminRoutes.js
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/authController'); 
+const authController = require('../controllers/authController');
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 const userController = require('../controllers/userController');
 const serviceController = require('../controllers/serviceController');
-const doctorScheduleController = require('../controllers/doctorScheduleController'); 
+const doctorScheduleController = require('../controllers/doctorScheduleController');
+const clinicSettingsController = require('../controllers/clinicSettingsController');
 
-// --- Route API untuk Dashboard Admin ---
-const isAdmin = (req, res, next) => {
-    if (req.user && req.user.id_level_user === 1) {
-        next();
-    } else {
-        return res.status(403).json({ message: 'Akses ditolak. Anda bukan Admin.' });
-    }
-};
+router.use(protect, authorizeRoles(1)); 
 
-// --- Route APIuntuk Halaman Admin ---
-router.get('/admin/register', protect, authorizeRoles([1]), (req, res) => {
+// --- Route API untuk Halaman Admin (Render EJS, jika ada) ---
+router.get('/register', (req, res) => {
     res.render('admin/register');
 });
+
 // --- Route API untuk Dashboard Admin ---
-router.get('/admin/dashboard-data', protect, authorizeRoles([1]), userController.getAdminDashboardData);
+router.get('/dashboard-data', userController.getAdminDashboardData);
 
 // --- Rute Manajemen Pengguna ---
-router.get('/admin/users', protect, authorizeRoles([1]), userController.getAllUsers);
-router.post('/admin/users', protect, authorizeRoles([1]), userController.addUser);
-router.get('/admin/users/:id', protect, authorizeRoles([1]), userController.getUserById);
-router.put('/admin/users/:id', protect, authorizeRoles([1]), userController.updateUser);
-router.delete('/admin/users/:id', protect, authorizeRoles([1]), userController.deleteUser);
-router.put('/admin/users/:id/activate', protect, authorizeRoles([1]), userController.activateUserAccount);
-router.put('/admin/users/:id/verify', protect, authorizeRoles([1]), userController.verifyUserAccount);
+router.get('/users', userController.getAllUsers);
+router.post('/users', userController.addUser);
+router.get('/users/:id', userController.getUserById);
+router.put('/users/:id', userController.updateUser);
+router.delete('/users/:id', userController.deleteUser);
+router.put('/users/:id/activate', userController.activateUserAccount);
+router.put('/users/:id/verify', userController.verifyUserAccount);
 
 // --- Rute Manajemen Dokter ---
-router.get('/admin/doctors', protect, authorizeRoles([1]), userController.getAllDoctors);
-router.post('/admin/doctors', protect, authorizeRoles([1]), userController.createDoctor);
-router.get('/admin/doctors/:id', protect, authorizeRoles([1]), userController.getDoctorByIdForEdit);
-router.put('/admin/doctors/:id', protect, authorizeRoles([1]), userController.updateDoctor);
-router.put('/admin/doctors/:id/deactivate', protect, authorizeRoles([1]), userController.deactivateDoctorAccount);
+router.get('/doctors', userController.getAllDoctors);
+router.post('/doctors', userController.createDoctor);
+router.get('/doctors/:id', userController.getDoctorByIdForEdit);
+router.put('/doctors/:id', userController.updateDoctor);
+router.put('/doctors/:id/deactivate', userController.deactivateDoctorAccount);
 
 // --- Rute Manajemen Layanan ---
-router.get('/admin/services', protect, authorizeRoles([1]), serviceController.getAllServices);
-router.post('/admin/services', protect, authorizeRoles([1]), serviceController.createService);
-router.get('/admin/services/:id', protect, authorizeRoles([1]), serviceController.getServiceById);
-router.put('/admin/services/:id', protect, authorizeRoles([1]), serviceController.updateService);
-router.put('/admin/services/:id/deactivate', protect, authorizeRoles([1]), serviceController.deactivateService);
-router.put('/admin/services/:id/activate', protect, authorizeRoles([1]), serviceController.activateService);
+router.get('/services', serviceController.getAllServices);
+router.post('/services', serviceController.createService);
+router.get('/services/:id', serviceController.getServiceById);
+router.put('/services/:id', serviceController.updateService);
+router.put('/services/:id/deactivate', serviceController.deactivateService);
+router.put('/services/:id/activate', serviceController.activateService);
 
-// --- Rute Manajemen Jadwal Dokter --- //
-router.get('/admin/doctors/:doctorId/schedules', doctorScheduleController.getSchedulesByDoctorId);
-router.get('/admin/schedules/:scheduleId', doctorScheduleController.getScheduleById);
-router.post('/admin/schedules', doctorScheduleController.createSchedule);
-router.put('/admin/schedules/:scheduleId', doctorScheduleController.updateSchedule);
-router.delete('/admin/schedules/:scheduleId', doctorScheduleController.deleteSchedule);
+// --- Rute Manajemen Jadwal Dokter ---
+router.get('/doctors/:doctorId/schedules', doctorScheduleController.getSchedulesByDoctorId);
+router.get('/schedules/:scheduleId', doctorScheduleController.getScheduleById);
+router.post('/schedules', doctorScheduleController.createSchedule);
+router.put('/schedules/:scheduleId', doctorScheduleController.updateSchedule);
+router.delete('/schedules/:scheduleId', doctorScheduleController.deleteSchedule);
 
+// --- Rute Pengaturan Klinik ---
+router.get('/settings', clinicSettingsController.getClinicSettings);
+router.put('/settings', clinicSettingsController.updateClinicSettings);
 
+// --- Route-route khusus PASIEN atau PUBLIK ---
+router.get('/booking/form-data', protect, authorizeRoles(4), userController.getBookingFormData); 
+router.get('/booking/available-slots', protect, authorizeRoles(4), userController.getAvailableDoctorSlots);
+router.post('/booking/create', protect, authorizeRoles(4), userController.bookAppointment);
 
-// Mendapatkan daftar dokter dan layanan untuk form booking
-router.get('/booking/form-data', protect, authorizeRoles([4]), userController.getBookingFormData);
-console.log('AdminRoutes: Registered GET /booking/form-data');
+router.post('/register', authController.register);
 
-// Mendapatkan jadwal kosong dokter berdasarkan ID dokter dan tanggal
-router.get('/booking/available-slots', protect, authorizeRoles([4]), userController.getAvailableDoctorSlots); // Hanya pasien yang bisa akses
-
-// Membuat janji temu baru
-router.post('/booking/create', protect, authorizeRoles([4]), userController.bookAppointment); // Hanya pasien yang bisa akses
-
-// POST /admin/register (Route API untuk proses registrasi admin)
-router.post('/admin/register', protect, authorizeRoles([1]), authController.register);
-console.log('AdminRoutes: Registered POST /admin/register');
-
-// --- API DASHBOARD PASIEN ---
-// URL: http://localhost:3000/pasien/dashboard-data
-router.get('/pasien/dashboard-data', protect, authorizeRoles([4]), userController.getPatientDashboardData);
-console.log('AdminRoutes: Registered GET /pasien/dashboard-data'); // Log untuk route pasien
+// API DASHBOARD PASIEN
+router.get('/pasien/dashboard-data', protect, authorizeRoles(4), userController.getPatientDashboardData); 
 
 module.exports = router;

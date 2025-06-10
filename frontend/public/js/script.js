@@ -33,6 +33,22 @@ let addDoctorForm;
 let doctorModalTitle; 
 let editDoctorIdInput; 
 
+// Pengaturan Klinik
+let clinicSettingsMessageArea;
+let generalSettingsForm;
+let systemSettingsForm;
+let setting_clinic_name;
+let setting_clinic_address;
+let setting_clinic_phone;
+let setting_clinic_email;
+let setting_clinic_logo_url;
+let setting_default_slot_duration;
+let setting_buffer_time;
+let setting_min_booking_lead_time_hours;
+let setting_max_booking_ahead_days;
+let setting_require_email_verification;
+
+
 // --- BAGIAN FUNGSI GLOBAL --- //
 function getToken() {
     const token = localStorage.getItem('token');
@@ -445,7 +461,6 @@ async function fetchUsers() {
 
 function createEditUserModal(user) {
     console.log("createEditUserModal called with user data:", user);
-    // Hapus modal lama jika ada (untuk menghindari duplikasi jika error sebelumnya tidak menghapus)
     const existingModal = document.getElementById('editUserModal');
     if (existingModal) {
         existingModal.remove();
@@ -582,12 +597,13 @@ function createEditUserModal(user) {
 
     if (editForm) {
         editForm.addEventListener('submit', handleUpdateUser);
+        console.log("createEditUserModal: Event listener for editUserForm attached."); 
     } else {
         console.error("createEditUserModal: Form 'editUserForm' tidak ditemukan.");
     }
 }
 
-async function handleEditUser(event) { // Dipanggil saat tombol "Edit" di tabel pengguna diklik
+async function handleEditUser(event) { 
     console.log('handleEditUser triggered. Event target:', event.target);
 
     const userId = event.target.dataset.id;
@@ -634,7 +650,6 @@ async function handleEditUser(event) { // Dipanggil saat tombol "Edit" di tabel 
             console.error('handleEditUser: Failed to load user data, result:', result);
         }
     } catch (error) {
-        // Ini akan menangkap error jaringan atau error dari throw di try-catch JSON parsing
         console.error('script.js (handleEditUser): Error fetching user for edit:', error);
         alert('Terjadi kesalahan saat memuat data pengguna untuk diedit.');
     }
@@ -1599,10 +1614,8 @@ window.loadDoctorSchedulesUI = async (doctorId) => {
         const schedulesData = await schedulesResponse.json();
 
         if (schedulesResponse.ok && schedulesData.success) {
-            // Jika berhasil, render jadwal ke dalam tabel
             renderSchedules(schedulesData.data);
         } else {
-            // Jika gagal, tampilkan pesan error di tabel
             const errorMessage = schedulesData.message || 'Gagal memuat jadwal.';
             schedulesTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Error: ${errorMessage}</td></tr>`;
             console.error('Gagal mengambil jadwal dokter:', errorMessage);
@@ -1720,6 +1733,127 @@ if (cancelEditButton) {
 }
 
 
+// --- FUNGSI PENGATURAN KLINIK --- //
+function displayClinicSettingsMessage(message, type) {
+    if (!clinicSettingsMessageArea) {
+        console.warn('Element #clinic-settings-message-area not found. Cannot display message.');
+        return;
+    }
+    clinicSettingsMessageArea.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    clinicSettingsMessageArea.style.display = 'block';
+    setTimeout(() => {
+        clinicSettingsMessageArea.style.display = 'none';
+        clinicSettingsMessageArea.innerHTML = '';
+    }, 5000);
+}
+
+window.fetchClinicSettings = async () => {
+    console.log('script.js (fetchClinicSettings): Fetching clinic settings...');
+    displayClinicSettingsMessage('Memuat pengaturan...', 'info'); 
+
+    try {
+        const response = await fetch('/admin/settings', {
+            method: 'GET',
+            headers: getAuthHeaders()
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success && result.data) {
+            const settings = result.data;
+            console.log('script.js (fetchClinicSettings): Received settings:', settings);
+
+            if (setting_clinic_name) setting_clinic_name.value = settings.clinic_name || '';
+            if (setting_clinic_address) setting_clinic_address.value = settings.clinic_address || '';
+            if (setting_clinic_phone) setting_clinic_phone.value = settings.clinic_phone || '';
+            if (setting_clinic_email) setting_clinic_email.value = settings.clinic_email || '';
+            if (setting_clinic_logo_url) setting_clinic_logo_url.value = settings.clinic_logo_url || '';
+
+            if (setting_default_slot_duration) setting_default_slot_duration.value = settings.default_slot_duration || '';
+            if (setting_buffer_time) setting_buffer_time.value = settings.buffer_time || '';
+            if (setting_min_booking_lead_time_hours) setting_min_booking_lead_time_hours.value = settings.min_booking_lead_time_hours || '';
+            if (setting_max_booking_ahead_days) setting_max_booking_ahead_days.value = settings.max_booking_ahead_days || '';
+            if (setting_require_email_verification) setting_require_email_verification.checked = settings.require_email_verification === true;
+
+            displayClinicSettingsMessage('Pengaturan berhasil dimuat.', 'success');
+
+        } else if (response.status === 401 || response.status === 403) {
+            alert('Sesi Anda telah berakhir atau Anda tidak memiliki izin. Silakan login kembali.');
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        } else {
+            displayClinicSettingsMessage(result.message || 'Gagal memuat pengaturan klinik.', 'error');
+        }
+    } catch (error) {
+        console.error('script.js (fetchClinicSettings): Error fetching clinic settings:', error);
+        displayClinicSettingsMessage('Terjadi kesalahan saat memuat pengaturan klinik.', 'error');
+    }
+};
+
+async function handleGeneralSettingsSubmit(event) {
+    event.preventDefault();
+    console.log('General Settings form submitted.');
+
+    const settingsToUpdate = {
+        clinic_name: setting_clinic_name.value,
+        clinic_address: setting_clinic_address.value,
+        clinic_phone: setting_clinic_phone.value,
+        clinic_email: setting_clinic_email.value,
+        clinic_logo_url: setting_clinic_logo_url.value,
+    };
+    console.log('Data to send for General Settings:', settingsToUpdate);
+
+    try {
+        const response = await fetch('/admin/settings', {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(settingsToUpdate)
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            displayClinicSettingsMessage(data.message || 'Informasi umum klinik berhasil diperbarui!', 'success');
+        } else {
+            displayClinicSettingsMessage(data.message || 'Gagal memperbarui informasi umum klinik.', 'error');
+        }
+    } catch (error) {
+        console.error('Error submitting General Settings:', error);
+        displayClinicSettingsMessage('Terjadi kesalahan saat menyimpan pengaturan umum.', 'error');
+    }
+}
+
+async function handleSystemSettingsSubmit(event) {
+    event.preventDefault();
+    console.log('System Settings form submitted.');
+
+    const settingsToUpdate = {
+        default_slot_duration: parseInt(setting_default_slot_duration.value),
+        buffer_time: parseInt(setting_buffer_time.value),
+        min_booking_lead_time_hours: parseInt(setting_min_booking_lead_time_hours.value),
+        max_booking_ahead_days: parseInt(setting_max_booking_ahead_days.value),
+        require_email_verification: setting_require_email_verification.checked, // Mengirim boolean
+    };
+    console.log('Data to send for System Settings:', settingsToUpdate);
+
+    try {
+        const response = await fetch('/admin/settings', {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(settingsToUpdate)
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            displayClinicSettingsMessage(data.message || 'Pengaturan sistem berhasil diperbarui!', 'success');
+        } else {
+            displayClinicSettingsMessage(data.message || 'Gagal memperbarui pengaturan sistem.', 'error');
+        }
+    } catch (error) {
+        console.error('Error submitting System Settings:', error);
+        displayClinicSettingsMessage('Terjadi kesalahan saat menyimpan pengaturan sistem.', 'error');
+    }
+}
+
+
 
 // --- Event listener utama untuk DOMContentLoaded ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1796,6 +1930,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         editDoctorIdInput: !!editDoctorIdInput
     });
 
+    // Inisialisasi variabel-variabel untuk Pengaturan Klinik
+    clinicSettingsMessageArea = document.getElementById('clinic-settings-message-area');
+    generalSettingsForm = document.getElementById('generalSettingsForm');
+    systemSettingsForm = document.getElementById('systemSettingsForm');
+    setting_clinic_name = document.getElementById('setting_clinic_name');
+    setting_clinic_address = document.getElementById('setting_clinic_address');
+    setting_clinic_phone = document.getElementById('setting_clinic_phone');
+    setting_clinic_email = document.getElementById('setting_clinic_email');
+    setting_clinic_logo_url = document.getElementById('setting_clinic_logo_url');
+    setting_default_slot_duration = document.getElementById('setting_default_slot_duration');
+    setting_buffer_time = document.getElementById('setting_buffer_time');
+    setting_min_booking_lead_time_hours = document.getElementById('setting_min_booking_lead_time_hours');
+    setting_max_booking_ahead_days = document.getElementById('setting_max_booking_ahead_days');
+    setting_require_email_verification = document.getElementById('setting_require_email_verification');
+    
+    console.log('Clinic Settings UI Elements Initialized (at DOMContentLoaded):', {
+        clinicSettingsMessageArea: !!clinicSettingsMessageArea,
+        generalSettingsForm: !!generalSettingsForm,
+        systemSettingsForm: !!systemSettingsForm,
+        setting_clinic_name: !!setting_clinic_name,
+        setting_clinic_address: !!setting_clinic_address,
+        setting_clinic_phone: !!setting_clinic_phone,
+        setting_clinic_email: !!setting_clinic_email,
+        setting_clinic_logo_url: !!setting_clinic_logo_url,
+        setting_default_slot_duration: !!setting_default_slot_duration,
+        setting_buffer_time: !!setting_buffer_time,
+        setting_min_booking_lead_time_hours: !!setting_min_booking_lead_time_hours,
+        setting_max_booking_ahead_days: !!setting_max_booking_ahead_days,
+        setting_require_email_verification: !!setting_require_email_verification,
+    });
+
     // Event listener untuk tombol Batal Edit Jadwal
     if (cancelEditButton) {
         cancelEditButton.addEventListener('click', resetFormForAdd);
@@ -1867,7 +2032,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             addServiceModalElement.style.display = 'block';
         });
     } else {
-        // Hanya log warning jika kita berada di halaman admin dashboard
         if (window.location.pathname === '/admin/dashboard' && !openAddServiceModalButton) {
              console.warn("Tombol 'Tambah Layanan Baru' (openAddServiceModalButton) tidak ditemukan di /admin/dashboard. Pastikan ID tombol di HTML section layanan sudah benar.");
         }
@@ -1999,6 +2163,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('Terjadi kesalahan saat menyimpan profil.');
             }
         });
+    }
+
+    // Event listener untuk form General Settings
+    if (generalSettingsForm) {
+        generalSettingsForm.addEventListener('submit', handleGeneralSettingsSubmit);
+        console.log('Event listener for generalSettingsForm attached.');
+    } else {
+        console.warn('generalSettingsForm element not found, skipping event listener attachment.');
+    }
+    if (systemSettingsForm) {
+        systemSettingsForm.addEventListener('submit', handleSystemSettingsSubmit);
+        console.log('Event listener for systemSettingsForm attached.');
+    } else {
+        console.warn('systemSettingsForm element not found, skipping event listener attachment.');
     }
 
     // --- Inisialisasi Event Listeners untuk Formulir Lain (Login, Register, dll.) ---
