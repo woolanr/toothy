@@ -1,653 +1,988 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard Admin - Happy Toothy</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-</head>
-<body>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <a href="/admin/dashboard">
-                    <img src="/assets/images/logo toothy.png" alt="Happy Toothy Logo" class="sidebar-logo">
-                    <span class="sidebar-title">Happy Toothy</span>
-                </a>
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <a href="/admin/dashboard">
+            <img
+              src="/assets/images/logo toothy.png"
+              alt="Happy Toothy Logo"
+              class="sidebar-logo"
+            />
+            <span class="sidebar-title">Happy Toothy</span>
+          </a>
+        </div>
+        <div class="sidebar-profile">
+          <div class="profile-avatar">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="profile-info">
+            <span id="adminUsername" class="profile-name">Admin</span>
+            <span class="profile-role">Administrator</span>
+          </div>
+          <button id="logoutButton" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+        <nav class="sidebar-nav">
+          <ul>
+            <li class="nav-item active" data-section="overview">
+              <a href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            </li>
+            <li class="nav-item has-submenu" data-section="user-management">
+              <a href="#"
+                ><i class="fas fa-users"></i> Manajemen Pengguna
+                <i class="fas fa-chevron-down submenu-icon"></i
+              ></a>
+              <ul class="submenu">
+                <li data-subsection="user-list">
+                  <a href="#"><i class="fas fa-list"></i> Daftar Pengguna</a>
+                </li>
+                <li data-subsection="add-user">
+                  <a href="#"
+                    ><i class="fas fa-user-plus"></i> Tambah Pengguna Baru</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item has-submenu" data-section="doctor-management">
+              <a href="#"
+                ><i class="fas fa-user-md"></i> Manajemen Dokter
+                <i class="fas fa-chevron-down submenu-icon"></i
+              ></a>
+              <ul class="submenu">
+                <li data-subsection="doctor-list">
+                  <a href="#"><i class="fas fa-list"></i> Daftar Dokter</a>
+                </li>
+                <li data-subsection="doctor-schedules-management">
+                  <a href="#"
+                    ><i class="fas fa-calendar-alt"></i> Kelola Jadwal Dokter</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-section="service-management">
+              <a href="#"><i class="fas fa-tooth"></i> Manajemen Layanan</a>
+            </li>
+            <li class="nav-item" data-section="clinic-settings">
+              <a href="#"><i class="fas fa-cog"></i> Pengaturan Klinik</a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="main-header-dashboard">
+          <h1 id="pageTitle">Dashboard Admin</h1>
+          <div class="header-right">
+            <div class="search-box">
+              <input type="text" placeholder="Cari..." />
+              <i class="fas fa-search"></i>
             </div>
-            <div class="sidebar-profile">
-                <div class="profile-avatar">
-                    <i class="fas fa-user-circle"></i>
-                </div>
-                <div class="profile-info">
-                    <span id="adminUsername" class="profile-name">Admin</span>
-                    <span class="profile-role">Administrator</span>
-                </div>
-                <button id="logoutButton" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <div class="notifications">
+              <i class="fas fa-bell"></i>
+              <span class="badge">3</span>
             </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li class="nav-item active" data-section="overview">
-                        <a href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                    </li>
-                    <li class="nav-item has-submenu" data-section="user-management">
-                        <a href="#"><i class="fas fa-users"></i> Manajemen Pengguna <i class="fas fa-chevron-down submenu-icon"></i></a>
-                        <ul class="submenu">
-                            <li data-subsection="user-list"><a href="#"><i class="fas fa-list"></i> Daftar Pengguna</a></li>
-                            <li data-subsection="add-user"><a href="#"><i class="fas fa-user-plus"></i> Tambah Pengguna Baru</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu" data-section="doctor-management">
-                        <a href="#"><i class="fas fa-user-md"></i> Manajemen Dokter <i class="fas fa-chevron-down submenu-icon"></i></a>
-                        <ul class="submenu">
-                            <li data-subsection="doctor-list"><a href="#"><i class="fas fa-list"></i> Daftar Dokter</a></li>
-                            <li data-subsection="doctor-schedules-management"><a href="#"><i class="fas fa-calendar-alt"></i> Kelola Jadwal Dokter</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item" data-section="service-management">
-                        <a href="#"><i class="fas fa-tooth"></i> Manajemen Layanan</a>
-                    </li>
-                    <li class="nav-item" data-section="clinic-settings">
-                        <a href="#"><i class="fas fa-cog"></i> Pengaturan Klinik</a>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
+          </div>
+        </header>
 
-        <main class="main-content">
-            <header class="main-header-dashboard">
-                <h1 id="pageTitle">Dashboard Admin</h1>
-                <div class="header-right">
-                    <div class="search-box">
-                        <input type="text" placeholder="Cari...">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <div class="notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
-                    </div>
-                </div>
-            </header>
+        <section class="content-section" id="overview-section">
+          <div class="welcome-card card">
+            <h2>Selamat datang, <span id="welcomeAdminName">Admin</span>!</h2>
+            <p>Ringkasan aktivitas dan status klinik Anda.</p>
+          </div>
+          <div class="summary-cards-grid">
+            <div class="summary-card card">
+              <div class="card-icon"><i class="fas fa-users"></i></div>
+              <div class="card-info">
+                <span class="card-value" id="totalUsers">0</span>
+                <span class="card-label">Total Pengguna</span>
+              </div>
+            </div>
+            <div class="summary-card card">
+              <div class="card-icon"><i class="fas fa-user-md"></i></div>
+              <div class="card-info">
+                <span class="card-value" id="totalDoctors">0</span>
+                <span class="card-label">Total Dokter</span>
+              </div>
+            </div>
+            <div class="summary-card card">
+              <div class="card-icon"><i class="fas fa-user-check"></i></div>
+              <div class="card-info">
+                <span class="card-value" id="pendingVerifications">0</span>
+                <span class="card-label">Verifikasi Tertunda</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-deck">
+            <div class="recent-activity card">
+              <h3>Aktivitas Terbaru</h3>
+              <ul>
+                <li>
+                  <i class="fas fa-user-plus"></i> Pengguna baru mendaftar:
+                  Jennie (2 menit yang lalu)
+                </li>
+                <li>
+                  <i class="fas fa-calendar-plus"></i> Janji temu baru dibuat:
+                  Jaehyun (5 menit yang lalu)
+                </li>
+                <li>
+                  <i class="fas fa-bell"></i> Verifikasi email tertunda: Paus
+                </li>
+              </ul>
+            </div>
+            <div class="upcoming-appointments-admin card">
+              <h3>Janji Temu Mendatang</h3>
+              <div class="data-table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Pasien</th>
+                      <th>Dokter</th>
+                      <th>Layanan</th>
+                      <th>Tanggal</th>
+                      <th>Waktu</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="upcomingAppointmentsAdminBody">
+                    <tr>
+                      <td colspan="7" class="text-center">
+                        Tidak ada janji temu mendatang.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
 
-            <section class="content-section" id="overview-section">
-                <div class="welcome-card card">
-                    <h2>Selamat datang, <span id="welcomeAdminName">Admin</span>!</h2>
-                    <p>Ringkasan aktivitas dan status klinik Anda.</p>
-                </div>
-                <div class="summary-cards-grid">
-                    <div class="summary-card card">
-                        <div class="card-icon"><i class="fas fa-users"></i></div>
-                        <div class="card-info">
-                            <span class="card-value" id="totalUsers">0</span>
-                            <span class="card-label">Total Pengguna</span>
-                        </div>
-                    </div>
-                    <div class="summary-card card">
-                        <div class="card-icon"><i class="fas fa-user-md"></i></div>
-                        <div class="card-info">
-                            <span class="card-value" id="totalDoctors">0</span>
-                            <span class="card-label">Total Dokter</span>
-                        </div>
-                    </div>
-                    <div class="summary-card card">
-                        <div class="card-icon"><i class="fas fa-user-check"></i></div>
-                        <div class="card-info">
-                            <span class="card-value" id="pendingVerifications">0</span>
-                            <span class="card-label">Verifikasi Tertunda</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-deck">
-                    <div class="recent-activity card">
-                        <h3>Aktivitas Terbaru</h3>
-                        <ul>
-                            <li><i class="fas fa-user-plus"></i> Pengguna baru mendaftar: Jennie (2 menit yang lalu)</li>
-                            <li><i class="fas fa-calendar-plus"></i> Janji temu baru dibuat: Jaehyun (5 menit yang lalu)</li>
-                            <li><i class="fas fa-bell"></i> Verifikasi email tertunda: Paus</li>
-                        </ul>
-                    </div>
-                    <div class="upcoming-appointments-admin card">
-                        <h3>Janji Temu Mendatang</h3>
-                        <div class="data-table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Pasien</th>
-                                        <th>Dokter</th>
-                                        <th>Layanan</th>
-                                        <th>Tanggal</th>
-                                        <th>Waktu</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="upcomingAppointmentsAdminBody">
-                                    <tr><td colspan="7" class="text-center">Tidak ada janji temu mendatang.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
+        <section class="content-section hidden" id="user-list-section">
+          <div class="filter-controls">
+            <input type="text" id="userSearch" placeholder="Cari pengguna..." />
+            <select id="userLevelFilter">
+              <option value="">Semua Level</option>
+              <option value="1">Admin</option>
+              <option value="2">Dokter</option>
+              <option value="3">Staff</option>
+              <option value="4">Pasien</option>
+            </select>
+            <select id="userStatusFilter">
+              <option value="">Semua Status</option>
+              <option value="1">Valid</option>
+              <option value="2">Belum Valid</option>
+              <option value="3">Keluar</option>
+            </select>
+            <button class="btn btn-primary" id="addUserBtnOnList">
+              <i class="fas fa-plus"></i> Tambah Pengguna Baru
+            </button>
+          </div>
+          <div class="data-table-container card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Nama Lengkap</th>
+                  <th>Level</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="userListBody">
+                <tr>
+                  <td colspan="7" class="text-center">Memuat data...</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pagination"></div>
+          </div>
+        </section>
 
-            <section class="content-section hidden" id="user-list-section">
-                <div class="filter-controls">
-                    <input type="text" id="userSearch" placeholder="Cari pengguna...">
-                    <select id="userLevelFilter">
-                        <option value="">Semua Level</option>
-                        <option value="1">Admin</option>
-                        <option value="2">Dokter</option>
-                        <option value="3">Staff</option>
-                        <option value="4">Pasien</option>
+        <section class="content-section hidden" id="add-user-section">
+          <div
+            class="auth-container card"
+            style="max-width: 600px; margin: 20px auto"
+          >
+            <form id="addUserForm" class="auth-form">
+              <div class="form-group">
+                <label for="addUser_nama_lengkap">Nama Lengkap</label>
+                <input
+                  type="text"
+                  id="addUser_nama_lengkap"
+                  name="nama_lengkap"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="addUser_email">Email</label>
+                <input type="email" id="addUser_email" name="email" required />
+              </div>
+              <div class="form-group">
+                <label for="addUser_username">Username</label>
+                <input
+                  type="text"
+                  id="addUser_username"
+                  name="username"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="addUser_password">Password</label>
+                <input
+                  type="password"
+                  id="addUser_password"
+                  name="password"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="addUser_id_level_user">Level Pengguna</label>
+                <select
+                  id="addUser_id_level_user"
+                  name="id_level_user"
+                  required
+                >
+                  <option value="4">Pasien</option>
+                  <option value="3">Staff</option>
+                  <option value="2">Dokter</option>
+                  <option value="1">Admin</option>
+                </select>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-full-width">
+                  Tambahkan Pengguna
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="content-section hidden" id="doctor-list-section">
+          <div class="section-header">
+            <button class="btn btn-primary" id="openAddDoctorModalButton">
+              <i class="fas fa-plus"></i> Tambah Dokter Baru
+            </button>
+          </div>
+          <div class="data-table-container card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID Dokter</th>
+                  <th>ID User</th>
+                  <th>Nama Dokter</th>
+                  <th>Spesialisasi</th>
+                  <th>Email</th>
+                  <th>No. Telepon</th>
+                  <th>No. Lisensi</th>
+                  <th>Pengalaman (Thn)</th>
+                  <th>Aksi</th>
+                  <th>Jadwal</th>
+                </tr>
+              </thead>
+              <tbody id="doctorListBody">
+                <tr>
+                  <td colspan="10" class="text-center">
+                    Memuat data dokter...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section
+          class="content-section hidden"
+          id="doctor-schedules-management-section"
+        >
+          <div class="section-header">
+            <h2>
+              Manajemen Jadwal untuk:
+              <span id="doctor-name-for-schedule"
+                >(Pilih Dokter dari Daftar)</span
+              >
+            </h2>
+            <button class="btn btn-secondary" id="backToDoctorListBtn">
+              <i class="fas fa-arrow-left"></i> Kembali ke Daftar Dokter
+            </button>
+          </div>
+          <div class="card-deck">
+            <div class="card form-card">
+              <h4><span id="form-action-title">Tambah</span> Jadwal Baru</h4>
+              <p class="text-muted" id="schedule-form-instruction">
+                <i
+                  >Pilih seorang dokter dari daftar untuk dapat menambahkan atau
+                  mengedit jadwal.</i
+                >
+              </p>
+              <fieldset id="schedule-fieldset" disabled>
+                <form id="schedule-form">
+                  <input type="hidden" id="schedule-id" />
+                  <input
+                    type="hidden"
+                    id="doctor-id-for-schedule"
+                    name="id_doctor"
+                  />
+                  <div class="form-group">
+                    <label for="hari_dalam_minggu">Hari:</label>
+                    <select
+                      id="hari_dalam_minggu"
+                      name="hari_dalam_minggu"
+                      required
+                    >
+                      <option value="">Pilih Hari</option>
+                      <option value="2">Senin</option>
+                      <option value="3">Selasa</option>
+                      <option value="4">Rabu</option>
+                      <option value="5">Kamis</option>
+                      <option value="6">Jumat</option>
+                      <option value="7">Sabtu</option>
+                      <option value="1">Minggu</option>
                     </select>
-                    <select id="userStatusFilter">
-                        <option value="">Semua Status</option>
-                        <option value="1">Valid</option>
-                        <option value="2">Belum Valid</option>
-                        <option value="3">Keluar</option>
-                    </select>
-                    <button class="btn btn-primary" id="addUserBtnOnList"><i class="fas fa-plus"></i> Tambah Pengguna Baru</button>
-                </div>
-                <div class="data-table-container card">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Nama Lengkap</th>
-                                <th>Level</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="userListBody">
-                            <tr><td colspan="7" class="text-center">Memuat data...</td></tr>
-                        </tbody>
-                    </table>
-                    <div class="pagination"></div>
-                </div>
-            </section>
-            
-            <section class="content-section hidden" id="add-user-section">
-                <div class="auth-container card" style="max-width: 600px; margin: 20px auto;">
-                    <form id="addUserForm" class="auth-form">
-                        <div class="form-group">
-                            <label for="addUser_nama_lengkap">Nama Lengkap</label>
-                            <input type="text" id="addUser_nama_lengkap" name="nama_lengkap" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="addUser_email">Email</label>
-                            <input type="email" id="addUser_email" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="addUser_username">Username</label>
-                            <input type="text" id="addUser_username" name="username" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="addUser_password">Password</label>
-                            <input type="password" id="addUser_password" name="password" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="addUser_id_level_user">Level Pengguna</label>
-                            <select id="addUser_id_level_user" name="id_level_user" required>
-                                <option value="4">Pasien</option>
-                                <option value="3">Staff</option>
-                                <option value="2">Dokter</option>
-                                <option value="1">Admin</option>
-                            </select>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary btn-full-width">Tambahkan Pengguna</button>
-                        </div>
-                    </form>
-                </div>
-            </section>
+                  </div>
+                  <div class="form-group">
+                    <label for="waktu_mulai">Waktu Mulai:</label>
+                    <input
+                      type="time"
+                      id="waktu_mulai"
+                      name="waktu_mulai"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="waktu_selesai">Waktu Selesai:</label>
+                    <input
+                      type="time"
+                      id="waktu_selesai"
+                      name="waktu_selesai"
+                      required
+                    />
+                  </div>
+                  <div class="form-group checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="is_available"
+                      name="is_available"
+                      checked
+                    />
+                    <label for="is_available">Tersedia</label>
+                  </div>
+                  <div class="form-actions">
+                    <button
+                      type="submit"
+                      class="btn btn-primary btn-full-width"
+                      id="submit-button"
+                    >
+                      Tambah Jadwal
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-full-width"
+                      id="cancel-edit-button"
+                      style="margin-top: 10px; display: none"
+                    >
+                      Batal Edit
+                    </button>
+                  </div>
+                </form>
+              </fieldset>
+            </div>
+            <div class="card schedule-list-card">
+              <h4>Daftar Jadwal</h4>
+              <div id="schedule-message-area" class="message-area"></div>
+              <div class="data-table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Hari</th>
+                      <th>Waktu Mulai</th>
+                      <th>Waktu Selesai</th>
+                      <th>Status</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="schedules-table-body">
+                    <tr>
+                      <td colspan="5" class="text-center">
+                        Pilih dokter untuk melihat jadwalnya.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
 
-            <section class="content-section hidden" id="doctor-list-section">
-                <div class="section-header">
-                    <button class="btn btn-primary" id="openAddDoctorModalButton"><i class="fas fa-plus"></i> Tambah Dokter Baru</button>
-                </div>
-                <div class="data-table-container card">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID Dokter</th>
-                                <th>ID User</th>
-                                <th>Nama Dokter</th>
-                                <th>Spesialisasi</th>
-                                <th>Email</th>
-                                <th>No. Telepon</th>
-                                <th>No. Lisensi</th>
-                                <th>Pengalaman (Thn)</th>
-                                <th>Aksi</th>
-                                <th>Jadwal</th>
-                            </tr>
-                        </thead>
-                        <tbody id="doctorListBody">
-                            <tr><td colspan="10" class="text-center">Memuat data dokter...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-            
-            <section class="content-section hidden" id="doctor-schedules-management-section">
-                <div class="section-header">
-                    <h2>Manajemen Jadwal untuk: <span id="doctor-name-for-schedule">(Pilih Dokter dari Daftar)</span></h2>
-                    <button class="btn btn-secondary" id="backToDoctorListBtn"><i class="fas fa-arrow-left"></i> Kembali ke Daftar Dokter</button>
-                </div>
-                <div class="card-deck">
-                    <div class="card form-card">
-                        <h4><span id="form-action-title">Tambah</span> Jadwal Baru</h4>
-                        <p class="text-muted" id="schedule-form-instruction">
-                            <i>Pilih seorang dokter dari daftar untuk dapat menambahkan atau mengedit jadwal.</i>
-                        </p>
-                        <fieldset id="schedule-fieldset" disabled>
-                            <form id="schedule-form">
-                                <input type="hidden" id="schedule-id">
-                                <input type="hidden" id="doctor-id-for-schedule" name="id_doctor"> 
-                                <div class="form-group">
-                                    <label for="hari_dalam_minggu">Hari:</label>
-                                    <select id="hari_dalam_minggu" name="hari_dalam_minggu" required>
-                                        <option value="">Pilih Hari</option>
-                                        <option value="2">Senin</option>
-                                        <option value="3">Selasa</option>
-                                        <option value="4">Rabu</option>
-                                        <option value="5">Kamis</option>
-                                        <option value="6">Jumat</option>
-                                        <option value="7">Sabtu</option>
-                                        <option value="1">Minggu</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="waktu_mulai">Waktu Mulai:</label>
-                                    <input type="time" id="waktu_mulai" name="waktu_mulai" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="waktu_selesai">Waktu Selesai:</label>
-                                    <input type="time" id="waktu_selesai" name="waktu_selesai" required>
-                                </div>
-                                <div class="form-group checkbox-group">
-                                    <input type="checkbox" id="is_available" name="is_available" checked>
-                                    <label for="is_available">Tersedia</label>
-                                </div>
-                                <div class="form-actions">
-                                    <button type="submit" class="btn btn-primary btn-full-width" id="submit-button">Tambah Jadwal</button>
-                                    <button type="button" class="btn btn-secondary btn-full-width" id="cancel-edit-button" style="margin-top:10px; display: none;">Batal Edit</button>
-                                </div>
-                            </form>
-                        </fieldset>
-                    </div>
-                    <div class="card schedule-list-card">
-                        <h4>Daftar Jadwal</h4>
-                        <div id="schedule-message-area" class="message-area"></div>
-                        <div class="data-table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Hari</th>
-                                        <th>Waktu Mulai</th>
-                                        <th>Waktu Selesai</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="schedules-table-body">
-                                    <tr><td colspan="5" class="text-center">Pilih dokter untuk melihat jadwalnya.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
+        <section class="content-section hidden" id="service-management-section">
+          <div class="filter-controls">
+            <label for="serviceStatusFilter">Filter Status:</label>
+            <select id="serviceStatusFilter">
+              <option value="Aktif">Aktif</option>
+              <option value="Nonaktif">Nonaktif</option>
+              <option value="Semua">Semua</option>
+            </select>
+            <button class="btn btn-primary" id="openAddServiceModalButton">
+              <i class="fas fa-plus"></i> Tambah Layanan Baru
+            </button>
+          </div>
+          <div class="data-table-container card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nama Layanan</th>
+                  <th>Deskripsi</th>
+                  <th>Durasi (Menit)</th>
+                  <th>Harga (Rp)</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="serviceListBody">
+                <tr>
+                  <td colspan="7" class="text-center">
+                    Memuat data layanan...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-            <section class="content-section hidden" id="service-management-section">
-                <div class="filter-controls">
-                    <label for="serviceStatusFilter">Filter Status:</label>
-                    <select id="serviceStatusFilter">
-                        <option value="Aktif">Aktif</option>
-                        <option value="Nonaktif">Nonaktif</option>
-                        <option value="Semua">Semua</option>
-                    </select>
-                    <button class="btn btn-primary" id="openAddServiceModalButton"><i class="fas fa-plus"></i> Tambah Layanan Baru</button>
-                </div>
-                <div class="data-table-container card">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nama Layanan</th>
-                                <th>Deskripsi</th>
-                                <th>Durasi (Menit)</th>
-                                <th>Harga (Rp)</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="serviceListBody">
-                            <tr><td colspan="7" class="text-center">Memuat data layanan...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+        <section class="content-section hidden" id="clinic-settings-section">
+          <div class="card settings-card">
+            <h4>Informasi Umum Klinik</h4>
+            <form id="generalSettingsForm">
+              <div class="form-group">
+                <label for="setting_clinic_name">Nama Klinik:</label>
+                <input
+                  type="text"
+                  id="setting_clinic_name"
+                  name="clinic_name"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="setting_clinic_address">Alamat:</label>
+                <textarea
+                  id="setting_clinic_address"
+                  name="clinic_address"
+                  rows="3"
+                ></textarea>
+              </div>
+              <div class="form-group">
+                <label for="setting_clinic_phone">No. Telepon:</label>
+                <input
+                  type="tel"
+                  id="setting_clinic_phone"
+                  name="clinic_phone"
+                />
+              </div>
+              <div class="form-group">
+                <label for="setting_clinic_email">Email Kontak:</label>
+                <input
+                  type="email"
+                  id="setting_clinic_email"
+                  name="clinic_email"
+                />
+              </div>
+              <div class="form-group">
+                <label for="setting_clinic_logo_url">URL Logo Klinik:</label>
+                <input
+                  type="url"
+                  id="setting_clinic_logo_url"
+                  name="clinic_logo_url"
+                />
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                  Simpan Informasi Umum
+                </button>
+              </div>
+            </form>
+          </div>
 
-            <section class="content-section hidden" id="clinic-settings-section">
-                <div class="card settings-card">
-                    <h4>Informasi Umum Klinik</h4>
-                    <form id="generalSettingsForm">
-                        <div class="form-group">
-                            <label for="setting_clinic_name">Nama Klinik:</label>
-                            <input type="text" id="setting_clinic_name" name="clinic_name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="setting_clinic_address">Alamat:</label>
-                            <textarea id="setting_clinic_address" name="clinic_address" rows="3"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="setting_clinic_phone">No. Telepon:</label>
-                            <input type="tel" id="setting_clinic_phone" name="clinic_phone">
-                        </div>
-                        <div class="form-group">
-                            <label for="setting_clinic_email">Email Kontak:</label>
-                            <input type="email" id="setting_clinic_email" name="clinic_email">
-                        </div>
-                        <div class="form-group">
-                            <label for="setting_clinic_logo_url">URL Logo Klinik:</label>
-                            <input type="url" id="setting_clinic_logo_url" name="clinic_logo_url">
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">Simpan Informasi Umum</button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="card settings-card">
-                    <h4>Pengaturan Janji Temu & Sistem</h4>
-                    <form id="systemSettingsForm">
-                        <div class="form-group">
-                            <label for="setting_default_slot_duration">Durasi Slot Default (menit):</label>
-                            <input type="number" id="setting_default_slot_duration" name="default_slot_duration" min="15" step="5" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="setting_buffer_time">Waktu Buffer Antar Janji (menit):</label>
-                            <input type="number" id="setting_buffer_time" name="buffer_time" min="0" step="5" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="setting_min_booking_lead_time_hours">Min. Booking Waktu Muka (jam):</label>
-                            <input type="number" id="setting_min_booking_lead_time_hours" name="min_booking_lead_time_hours" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="setting_max_booking_ahead_days">Max. Booking Ke Depan (hari):</label>
-                            <input type="number" id="setting_max_booking_ahead_days" name="max_booking_ahead_days" min="1" required>
-                        </div>
-                        <div class="form-group checkbox-group">
-                            <input type="checkbox" id="setting_require_email_verification" name="require_email_verification">
-                            <label for="setting_require_email_verification">Verifikasi Email Pasien Baru</label>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">Simpan Pengaturan Sistem</button>
-                        </div>
-                    </form>
-                </div>
-                <div id="clinic-settings-message-area" class="message-area"></div>
-            </section>
-        </main>
+          <div class="card settings-card">
+            <h4>Pengaturan Janji Temu & Sistem</h4>
+            <form id="systemSettingsForm">
+              <div class="form-group">
+                <label for="setting_default_slot_duration"
+                  >Durasi Slot Default (menit):</label
+                >
+                <input
+                  type="number"
+                  id="setting_default_slot_duration"
+                  name="default_slot_duration"
+                  min="15"
+                  step="5"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="setting_buffer_time"
+                  >Waktu Buffer Antar Janji (menit):</label
+                >
+                <input
+                  type="number"
+                  id="setting_buffer_time"
+                  name="buffer_time"
+                  min="0"
+                  step="5"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="setting_min_booking_lead_time_hours"
+                  >Min. Booking Waktu Muka (jam):</label
+                >
+                <input
+                  type="number"
+                  id="setting_min_booking_lead_time_hours"
+                  name="min_booking_lead_time_hours"
+                  min="0"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="setting_max_booking_ahead_days"
+                  >Max. Booking Ke Depan (hari):</label
+                >
+                <input
+                  type="number"
+                  id="setting_max_booking_ahead_days"
+                  name="max_booking_ahead_days"
+                  min="1"
+                  required
+                />
+              </div>
+              <div class="form-group checkbox-group">
+                <input
+                  type="checkbox"
+                  id="setting_require_email_verification"
+                  name="require_email_verification"
+                />
+                <label for="setting_require_email_verification"
+                  >Verifikasi Email Pasien Baru</label
+                >
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                  Simpan Pengaturan Sistem
+                </button>
+              </div>
+            </form>
+          </div>
+          <div id="clinic-settings-message-area" class="message-area"></div>
+        </section>
+      </main>
     </div>
 
     <div id="addServiceModal" class="modal">
-        <div class="modal-content card">
-            <div class="modal-header">
-                <h2 id="serviceModalTitle">Tambah Layanan Baru</h2>
-                <span class="close-button" id="closeServiceModalBtn">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="addServiceForm" class="auth-form">
-                    <input type="hidden" id="editServiceId" name="editServiceId">
-                    <div class="form-group">
-                        <label for="addService_nama_layanan">Nama Layanan</label>
-                        <input type="text" id="addService_nama_layanan" name="nama_layanan" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="addService_deskripsi">Deskripsi (Opsional)</label>
-                        <textarea id="addService_deskripsi" name="deskripsi" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="addService_harga">Harga (Rp)</label>
-                        <input type="number" id="addService_harga" name="harga" min="0" step="any" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="addService_durasi_menit">Durasi (Menit, Opsional)</label>
-                        <input type="number" id="addService_durasi_menit" name="durasi_menit" min="0">
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" id="saveServiceBtn" class="btn btn-primary btn-full-width">Simpan Layanan</button>
-                        <button type="button" id="cancelServiceModalBtn" class="btn btn-secondary btn-full-width" style="margin-top:10px;">Batal</button>
-                    </div>
-                </form>
-            </div>
+      <div class="modal-content card">
+        <div class="modal-header">
+          <h2 id="serviceModalTitle">Tambah Layanan Baru</h2>
+          <span class="close-button" id="closeServiceModalBtn">&times;</span>
         </div>
+        <div class="modal-body">
+          <form id="addServiceForm" class="auth-form">
+            <input type="hidden" id="editServiceId" name="editServiceId" />
+            <div class="form-group">
+              <label for="addService_nama_layanan">Nama Layanan</label>
+              <input
+                type="text"
+                id="addService_nama_layanan"
+                name="nama_layanan"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="addService_deskripsi">Deskripsi (Opsional)</label>
+              <textarea
+                id="addService_deskripsi"
+                name="deskripsi"
+                rows="3"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label for="addService_harga">Harga (Rp)</label>
+              <input
+                type="number"
+                id="addService_harga"
+                name="harga"
+                min="0"
+                step="any"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="addService_durasi_menit"
+                >Durasi (Menit, Opsional)</label
+              >
+              <input
+                type="number"
+                id="addService_durasi_menit"
+                name="durasi_menit"
+                min="0"
+              />
+            </div>
+            <div class="form-actions">
+              <button
+                type="submit"
+                id="saveServiceBtn"
+                class="btn btn-primary btn-full-width"
+              >
+                Simpan Layanan
+              </button>
+              <button
+                type="button"
+                id="cancelServiceModalBtn"
+                class="btn btn-secondary btn-full-width"
+                style="margin-top: 10px"
+              >
+                Batal
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <div id="addDoctorModal" class="modal">
-        <div class="modal-content card">
-            <div class="modal-header">
-                <h2 id="doctorModalTitle">Tambah Dokter Baru</h2>
-                <span class="close-button" id="closeAddDoctorModalBtn">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="addDoctorForm" class="auth-form">
-                    <input type="hidden" id="editDoctorId" name="editDoctorId">
-                    <div class="form-group">
-                        <label for="addDoctor_nama_lengkap">Nama Lengkap</label>
-                        <input type="text" id="addDoctor_nama_lengkap" name="nama_lengkap" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="addDoctor_username">Username</label>
-                        <input type="text" id="addDoctor_username" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="addDoctor_email">Email</label>
-                        <input type="email" id="addDoctor_email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="addDoctor_password">Password</label>
-                        <input type="password" id="addDoctor_password" name="password" placeholder="Kosongkan jika tidak ingin mengubah">
-                    </div>
-                    <div class="form-group">
-                        <label for="addDoctor_no_telepon">No. Telepon (Opsional)</label>
-                        <input type="tel" id="addDoctor_no_telepon" name="no_telepon">
-                    </div>
-                    <hr>
-                    <h4 style="margin-top:15px; margin-bottom:10px;">Detail Spesifik Dokter:</h4>
-                    <div class="form-group">
-                        <label for="addDoctor_spesialisasi">Spesialisasi</label>
-                        <input type="text" id="addDoctor_spesialisasi" name="spesialisasi" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="addDoctor_lisensi_no">No. Lisensi</label>
-                        <input type="text" id="addDoctor_lisensi_no" name="lisensi_no" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="addDoctor_pengalaman_tahun">Pengalaman (Tahun)</label>
-                        <input type="number" id="addDoctor_pengalaman_tahun" name="pengalaman_tahun" min="0" required>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary btn-full-width" id="saveDoctorBtn">Simpan Dokter</button>
-                        <button type="button" id="cancelAddDoctorBtn" class="btn btn-secondary btn-full-width" style="margin-top:10px;">Batal</button>
-                    </div>
-                </form>
-            </div>
+      <div class="modal-content card">
+        <div class="modal-header">
+          <h2 id="doctorModalTitle">Tambah Dokter Baru</h2>
+          <span class="close-button" id="closeAddDoctorModalBtn">&times;</span>
         </div>
+        <div class="modal-body">
+          <form id="addDoctorForm" class="auth-form">
+            <input type="hidden" id="editDoctorId" name="editDoctorId" />
+            <div class="form-group">
+              <label for="addDoctor_nama_lengkap">Nama Lengkap</label>
+              <input
+                type="text"
+                id="addDoctor_nama_lengkap"
+                name="nama_lengkap"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="addDoctor_username">Username</label>
+              <input
+                type="text"
+                id="addDoctor_username"
+                name="username"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="addDoctor_email">Email</label>
+              <input type="email" id="addDoctor_email" name="email" required />
+            </div>
+            <div class="form-group">
+              <label for="addDoctor_password">Password</label>
+              <input
+                type="password"
+                id="addDoctor_password"
+                name="password"
+                placeholder="Kosongkan jika tidak ingin mengubah"
+              />
+            </div>
+            <div class="form-group">
+              <label for="addDoctor_no_telepon">No. Telepon (Opsional)</label>
+              <input type="tel" id="addDoctor_no_telepon" name="no_telepon" />
+            </div>
+            <hr />
+            <h4 style="margin-top: 15px; margin-bottom: 10px">
+              Detail Spesifik Dokter:
+            </h4>
+            <div class="form-group">
+              <label for="addDoctor_spesialisasi">Spesialisasi</label>
+              <input
+                type="text"
+                id="addDoctor_spesialisasi"
+                name="spesialisasi"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="addDoctor_lisensi_no">No. Lisensi</label>
+              <input
+                type="text"
+                id="addDoctor_lisensi_no"
+                name="lisensi_no"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="addDoctor_pengalaman_tahun">Pengalaman (Tahun)</label>
+              <input
+                type="number"
+                id="addDoctor_pengalaman_tahun"
+                name="pengalaman_tahun"
+                min="0"
+                required
+              />
+            </div>
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="btn btn-primary btn-full-width"
+                id="saveDoctorBtn"
+              >
+                Simpan Dokter
+              </button>
+              <button
+                type="button"
+                id="cancelAddDoctorBtn"
+                class="btn btn-secondary btn-full-width"
+                style="margin-top: 10px"
+              >
+                Batal
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <script src="/js/script.js"></script>
     <script>
-
-
-    document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener("DOMContentLoaded", () => {
         // Elemen-elemen utama
-        const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
-        const contentSections = document.querySelectorAll('.main-content .content-section');
-        const pageTitleElement = document.getElementById('pageTitle');
+        const navItems = document.querySelectorAll(".sidebar-nav .nav-item");
+        const contentSections = document.querySelectorAll(
+          ".main-content .content-section"
+        );
+        const pageTitleElement = document.getElementById("pageTitle");
 
         // --- FUNGSI UTAMA UNTUK MENAMPILKAN SECTION ---
         function showSection(sectionIdToShow, paramId = null) {
-            console.log(`showSection dipanggil untuk: ${sectionIdToShow}, dengan ID parameter: ${paramId}`);
-            
-            contentSections.forEach(section => {
-                section.classList.add('hidden');
-            });
+          console.log(
+            `showSection dipanggil untuk: ${sectionIdToShow}, dengan ID parameter: ${paramId}`
+          );
 
-            const currentSectionElement = document.getElementById(sectionIdToShow);
-            if (currentSectionElement) {
-                currentSectionElement.classList.remove('hidden');
-                updatePageTitle(sectionIdToShow);
-                loadSectionData(sectionIdToShow, paramId);
-            } else {
-                console.warn(`showSection: Section dengan ID '${sectionIdToShow}' tidak ditemukan.`);
-                document.getElementById('overview-section').classList.remove('hidden');
-                updatePageTitle('overview-section');
-            }
+          contentSections.forEach((section) => {
+            section.classList.add("hidden");
+          });
+
+          const currentSectionElement =
+            document.getElementById(sectionIdToShow);
+          if (currentSectionElement) {
+            currentSectionElement.classList.remove("hidden");
+            updatePageTitle(sectionIdToShow);
+            loadSectionData(sectionIdToShow, paramId);
+          } else {
+            console.warn(
+              `showSection: Section dengan ID '${sectionIdToShow}' tidak ditemukan.`
+            );
+            document
+              .getElementById("overview-section")
+              .classList.remove("hidden");
+            updatePageTitle("overview-section");
+          }
         }
 
         // --- FUNGSI UNTUK MEMUAT DATA BERDASARKAN SECTION ---
         function loadSectionData(sectionId, paramId) {
-            console.log(`Memuat data untuk section: ${sectionId}`);
-            switch(sectionId) {
-                case 'overview-section':
-                    if (typeof fetchDashboardData === 'function') fetchDashboardData();
-                    break;
-                case 'user-list-section':
-                    if (typeof fetchUsers === 'function') fetchUsers();
-                    break;
-                case 'doctor-list-section':
-                    if (typeof fetchDoctors === 'function') fetchDoctors();
-                    break;
-                case 'service-management-section':
-                    if (typeof fetchServices === 'function') fetchServices();
-                    break;
-                case 'doctor-schedules-management-section':
-                    // Reset UI ke keadaan awal
-                    const fieldset = document.getElementById('schedule-fieldset');
-                    const doctorNameSpan = document.getElementById('doctor-name-for-schedule');
-                    const instructionText = document.getElementById('schedule-form-instruction');
+          console.log(`Memuat data untuk section: ${sectionId}`);
+          switch (sectionId) {
+            case "overview-section":
+              if (typeof fetchDashboardData === "function")
+                fetchDashboardData();
+              break;
+            case "user-list-section":
+              if (typeof fetchUsers === "function") fetchUsers();
+              break;
+            case "doctor-list-section":
+              if (typeof fetchDoctors === "function") fetchDoctors();
+              break;
+            case "service-management-section":
+              if (typeof fetchServices === "function") fetchServices();
+              break;
+            case "doctor-schedules-management-section":
+              // Reset UI ke keadaan awal
+              const fieldset = document.getElementById("schedule-fieldset");
+              const doctorNameSpan = document.getElementById(
+                "doctor-name-for-schedule"
+              );
+              const instructionText = document.getElementById(
+                "schedule-form-instruction"
+              );
 
-                    if(fieldset) fieldset.disabled = true;
-                    if(doctorNameSpan) doctorNameSpan.textContent = '(Pilih Dokter dari Daftar)';
-                    if(instructionText) {
-                        instructionText.style.display = 'block';
-                        instructionText.textContent = 'Pilih seorang dokter dari daftar untuk dapat menambahkan atau mengedit jadwal.';
-                    }
-                    document.getElementById('schedules-table-body').innerHTML = '<tr><td colspan="5" class="text-center">Pilih dokter dari daftar untuk mengelola jadwalnya.</td></tr>';
-                    
-                    if (paramId && typeof window.loadDoctorSchedulesUI === 'function') {
-                        window.loadDoctorSchedulesUI(paramId);
-                        window.scrollTo(0, 0);
-                    }
-                    break;
-                case 'clinic-settings-section':
-                    if (typeof window.fetchClinicSettings === 'function') {
-                        window.fetchClinicSettings(); 
-                    } else {
-                        console.error('fetchClinicSettings function is not defined!');
-                    }
-                    break;
-            }
+              if (fieldset) fieldset.disabled = true;
+              if (doctorNameSpan)
+                doctorNameSpan.textContent = "(Pilih Dokter dari Daftar)";
+              if (instructionText) {
+                instructionText.style.display = "block";
+                instructionText.textContent =
+                  "Pilih seorang dokter dari daftar untuk dapat menambahkan atau mengedit jadwal.";
+              }
+              document.getElementById("schedules-table-body").innerHTML =
+                '<tr><td colspan="5" class="text-center">Pilih dokter dari daftar untuk mengelola jadwalnya.</td></tr>';
+
+              if (
+                paramId &&
+                typeof window.loadDoctorSchedulesUI === "function"
+              ) {
+                window.loadDoctorSchedulesUI(paramId);
+                window.scrollTo(0, 0);
+              }
+              break;
+            case "clinic-settings-section":
+              if (typeof window.fetchClinicSettings === "function") {
+                window.fetchClinicSettings();
+              } else {
+                console.error("fetchClinicSettings function is not defined!");
+              }
+              break;
+          }
         }
 
         // --- FUNGSI BANTUAN UNTUK UPDATE JUDUL HALAMAN ---
         function updatePageTitle(sectionId) {
-            let titleText = 'Dashboard'; // Default
-            const activeLink = document.querySelector(`.nav-item[data-section="${sectionId.replace('-section', '')}"] > a, .submenu li[data-subsection="${sectionId.replace('-section', '')}"] > a`);
-            
-            if (activeLink) {
-                const linkClone = activeLink.cloneNode(true);
-                const chevron = linkClone.querySelector('.submenu-icon');
-                if (chevron) chevron.remove();
-                titleText = linkClone.textContent.trim();
-            } else if (sectionId === 'add-user-section') {
-                titleText = 'Tambah Pengguna Baru';
-            }
-            
-            if(pageTitleElement) pageTitleElement.textContent = titleText;
+          let titleText = "Dashboard"; // Default
+          const activeLink = document.querySelector(
+            `.nav-item[data-section="${sectionId.replace(
+              "-section",
+              ""
+            )}"] > a, .submenu li[data-subsection="${sectionId.replace(
+              "-section",
+              ""
+            )}"] > a`
+          );
+
+          if (activeLink) {
+            const linkClone = activeLink.cloneNode(true);
+            const chevron = linkClone.querySelector(".submenu-icon");
+            if (chevron) chevron.remove();
+            titleText = linkClone.textContent.trim();
+          } else if (sectionId === "add-user-section") {
+            titleText = "Tambah Pengguna Baru";
+          }
+
+          if (pageTitleElement) pageTitleElement.textContent = titleText;
         }
 
         // --- LOGIKA NAVIGASI SIDEBAR ---
         function handleMenuClick(e, item) {
-            e.preventDefault();
-            e.stopPropagation();
+          e.preventDefault();
+          e.stopPropagation();
 
-            const isSubmenu = item.closest('.submenu');
-            const parentNavItem = item.closest('.nav-item');
-            
-            if (parentNavItem.classList.contains('has-submenu') && !isSubmenu) {
-                parentNavItem.classList.toggle('active');
-                parentNavItem.querySelector('.submenu').classList.toggle('active');
-            } else {
-                const sectionOrSubsectionId = isSubmenu ? item.dataset.subsection : parentNavItem.dataset.section;
-                showSection(sectionOrSubsectionId + '-section');
-                
-                document.querySelectorAll('.nav-item, .submenu > li').forEach(el => el.classList.remove('active', 'active-submenu-item'));
-                parentNavItem.classList.add('active');
-                if(isSubmenu) {
-                    item.classList.add('active-submenu-item');
-                    parentNavItem.querySelector('.submenu').classList.add('active');
-                }
+          const isSubmenu = item.closest(".submenu");
+          const parentNavItem = item.closest(".nav-item");
+
+          if (parentNavItem.classList.contains("has-submenu") && !isSubmenu) {
+            parentNavItem.classList.toggle("active");
+            parentNavItem.querySelector(".submenu").classList.toggle("active");
+          } else {
+            const sectionOrSubsectionId = isSubmenu
+              ? item.dataset.subsection
+              : parentNavItem.dataset.section;
+            showSection(sectionOrSubsectionId + "-section");
+
+            document
+              .querySelectorAll(".nav-item, .submenu > li")
+              .forEach((el) =>
+                el.classList.remove("active", "active-submenu-item")
+              );
+            parentNavItem.classList.add("active");
+            if (isSubmenu) {
+              item.classList.add("active-submenu-item");
+              parentNavItem.querySelector(".submenu").classList.add("active");
             }
+          }
         }
 
-        navItems.forEach(item => {
-            item.querySelectorAll('a').forEach(link => {
-                const liParent = link.closest('li');
-                link.addEventListener('click', (e) => handleMenuClick(e, liParent));
-            });
+        navItems.forEach((item) => {
+          item.querySelectorAll("a").forEach((link) => {
+            const liParent = link.closest("li");
+            link.addEventListener("click", (e) => handleMenuClick(e, liParent));
+          });
         });
 
         // --- EVENT LISTENER TOMBOL-TOMBOL NAVIGASI KHUSUS ---
 
         // Tombol "Tambah Pengguna" dari halaman daftar pengguna
-        const addUserBtnOnList = document.getElementById('addUserBtnOnList');
+        const addUserBtnOnList = document.getElementById("addUserBtnOnList");
         if (addUserBtnOnList) {
-            addUserBtnOnList.addEventListener('click', () => {
-                const addUserSubmenuItem = document.querySelector('.submenu li[data-subsection="add-user"]');
-                if(addUserSubmenuItem) handleMenuClick(new Event('click'), addUserSubmenuItem);
-            });
+          addUserBtnOnList.addEventListener("click", () => {
+            const addUserSubmenuItem = document.querySelector(
+              '.submenu li[data-subsection="add-user"]'
+            );
+            if (addUserSubmenuItem)
+              handleMenuClick(new Event("click"), addUserSubmenuItem);
+          });
         }
 
         // Tombol "Kembali ke Daftar Dokter" dari halaman jadwal
-        const backToDoctorListBtn = document.getElementById('backToDoctorListBtn');
+        const backToDoctorListBtn = document.getElementById(
+          "backToDoctorListBtn"
+        );
         if (backToDoctorListBtn) {
-            backToDoctorListBtn.addEventListener('click', () => {
-                const doctorListSubmenuItem = document.querySelector('.submenu li[data-subsection="doctor-list"]');
-                if(doctorListSubmenuItem) handleMenuClick(new Event('click'), doctorListSubmenuItem);
-            });
+          backToDoctorListBtn.addEventListener("click", () => {
+            const doctorListSubmenuItem = document.querySelector(
+              '.submenu li[data-subsection="doctor-list"]'
+            );
+            if (doctorListSubmenuItem)
+              handleMenuClick(new Event("click"), doctorListSubmenuItem);
+          });
         }
 
         window.showDoctorSchedules = (doctorId) => {
-            const schedulesSubmenuItem = document.querySelector('.submenu li[data-subsection="doctor-schedules-management"]');
-            if(schedulesSubmenuItem) {
-                showSection('doctor-schedules-management-section', doctorId);
-                
-                document.querySelectorAll('.nav-item, .submenu > li').forEach(el => el.classList.remove('active', 'active-submenu-item'));
-                const parentNavItem = schedulesSubmenuItem.closest('.nav-item');
-                parentNavItem.classList.add('active');
-                parentNavItem.querySelector('.submenu').classList.add('active');
-                schedulesSubmenuItem.classList.add('active-submenu-item');
-            }
+          const schedulesSubmenuItem = document.querySelector(
+            '.submenu li[data-subsection="doctor-schedules-management"]'
+          );
+          if (schedulesSubmenuItem) {
+            showSection("doctor-schedules-management-section", doctorId);
+
+            document
+              .querySelectorAll(".nav-item, .submenu > li")
+              .forEach((el) =>
+                el.classList.remove("active", "active-submenu-item")
+              );
+            const parentNavItem = schedulesSubmenuItem.closest(".nav-item");
+            parentNavItem.classList.add("active");
+            parentNavItem.querySelector(".submenu").classList.add("active");
+            schedulesSubmenuItem.classList.add("active-submenu-item");
+          }
         };
 
         // --- INISIALISASI HALAMAN ---
-        const pathSegments = window.location.pathname.split('/');
-        if (pathSegments[1] === 'admin' && pathSegments[2] === 'doctors' && pathSegments[3] && pathSegments[4] === 'schedules') {
-            const initialDoctorId = pathSegments[3];
-            window.showDoctorSchedules(initialDoctorId);
+        const pathSegments = window.location.pathname.split("/");
+        if (
+          pathSegments[1] === "admin" &&
+          pathSegments[2] === "doctors" &&
+          pathSegments[3] &&
+          pathSegments[4] === "schedules"
+        ) {
+          const initialDoctorId = pathSegments[3];
+          window.showDoctorSchedules(initialDoctorId);
         } else {
-            const initialActiveItem = document.querySelector('.sidebar-nav .nav-item.active');
-            showSection(initialActiveItem.dataset.section + '-section');
+          const initialActiveItem = document.querySelector(
+            ".sidebar-nav .nav-item.active"
+          );
+          showSection(initialActiveItem.dataset.section + "-section");
         }
-    });
+      });
     </script>
-</body>
+  </body>
 </html>

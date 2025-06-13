@@ -1,55 +1,79 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Verifikasi Email Anda - Happy Toothy Dental Clinic</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-</head>
-<body class="auth-page">
+    <link rel="stylesheet" href="/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="auth-page">
     <div class="auth-wrapper">
-        <div class="auth-container">
-            <div class="auth-header">
-                <a href="/">
-                    <img src="/assets/images/logo toothy.png" alt="Happy Toothy Logo" class="auth-logo">
-                    <span class="site-title-auth">Happy Toothy</span>
-                </a>
-                <h2>Verifikasi Email Anda</h2>
-            </div>
-            
-            <div class="verification-content">
-                <i class="fas fa-envelope-open-text verification-icon"></i>
-                
-                <% if (typeof message !== 'undefined' && message) { %>
-                    <p class="verification-alert-message"><%= message %></p>
-                <% } else { %>
-                    <p>Terima kasih telah mendaftar di Happy Toothy!</p>
-                    <p>Kami telah mengirimkan link verifikasi ke alamat email Anda.</p>
-                <% } %>
-
-                <p>Silakan periksa kotak masuk (inbox) atau folder spam/junk email Anda untuk menyelesaikan proses pendaftaran.</p>
-                <p class="small-text">Link verifikasi ini mungkin memiliki batas waktu. Jika Anda tidak menerimanya dalam beberapa menit:</p>
-                
-                <div class="resend-section">
-                    <h3>Kirim Ulang Email Verifikasi</h3>
-                    <form id="resendVerificationForm" class="auth-form">
-                        <div class="form-group">
-                            <label for="resendEmail">Email Anda</label>
-                            <input type="email" id="resendEmail" name="email" required placeholder="Masukkan email yang Anda daftarkan">
-                        </div>
-                        <button type="submit" class="btn btn-secondary btn-full-width">Kirim Ulang</button>
-                    </form>
-                </div>
-
-                <div class="auth-footer-links mt-3">
-                    <p>Sudah verifikasi? <a href="/login">Login Sekarang</a></p>
-                </div>
-            </div>
+      <div class="auth-container">
+        <div class="auth-header">
+          <a href="/">
+            <img
+              src="/assets/images/logo toothy.png"
+              alt="Happy Toothy Logo"
+              class="auth-logo"
+            />
+            <span class="site-title-auth">Happy Toothy</span>
+          </a>
+          <h2>Verifikasi Email Anda</h2>
         </div>
+
+        <div class="verification-content">
+          <i class="fas fa-envelope-open-text verification-icon"></i>
+
+          <% if (typeof message !== 'undefined' && message) { %>
+          <p class="verification-alert-message"><%= message %></p>
+          <% } else { %>
+          <p>Terima kasih telah mendaftar di Happy Toothy!</p>
+          <p>Kami telah mengirimkan link verifikasi ke alamat email Anda.</p>
+          <% } %>
+
+          <p>
+            Silakan periksa kotak masuk (inbox) atau folder spam/junk email Anda
+            untuk menyelesaikan proses pendaftaran.
+          </p>
+          <p class="small-text">
+            Link verifikasi ini mungkin memiliki batas waktu. Jika Anda tidak
+            menerimanya dalam beberapa menit:
+          </p>
+
+          <div class="resend-section">
+            <h3>Kirim Ulang Email Verifikasi</h3>
+            <form id="resendVerificationForm" class="auth-form">
+              <div class="form-group">
+                <label for="resendEmail">Email Anda</label>
+                <input
+                  type="email"
+                  id="resendEmail"
+                  name="email"
+                  required
+                  placeholder="Masukkan email yang Anda daftarkan"
+                />
+              </div>
+              <button type="submit" class="btn btn-secondary btn-full-width">
+                Kirim Ulang
+              </button>
+            </form>
+          </div>
+
+          <div class="auth-footer-links mt-3">
+            <p>Sudah verifikasi? <a href="/login">Login Sekarang</a></p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="/js/script.js"></script>
-</body>
+  </body>
 </html>
