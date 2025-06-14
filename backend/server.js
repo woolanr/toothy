@@ -6,6 +6,7 @@ const path = require("path");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const pasienRoutes = require("./routes/pasienRoutes");
+const doctorRoutes = require("./routes/doctorRoutes");
 
 const app = express();
 const port = 3000;
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// --- Frontend EJS Routes ---
 app.get("/", (req, res) => {
   console.log("Serving index page.");
   res.render("index");
@@ -65,6 +67,7 @@ app.get("/verification", (req, res) => {
   res.render("verification", { message: req.query.message || null });
 });
 
+// Admin Pages
 app.get("/admin/register", (req, res) => {
   console.log("Serving admin register page.");
   res.render("admin/register");
@@ -75,6 +78,13 @@ app.get("/admin/dashboard", (req, res) => {
   res.render("admin/dashboard");
 });
 
+// --- Doctor Pages ---
+app.get("/dokter/dashboard", (req, res) => {
+  console.log("Serving dokter dashboard page.");
+  res.render("doctor/dashboard");
+});
+
+// Pasien Pages
 app.get("/pasien/dashboard", (req, res) => {
   console.log("Serving pasien dashboard page.");
   res.render("pasien/dashboard");
@@ -83,7 +93,9 @@ app.get("/pasien/dashboard", (req, res) => {
 app.use("/", authRoutes);
 app.use("/admin", adminRoutes);
 app.use("/pasien", pasienRoutes);
+app.use("/dokter", doctorRoutes);
 
+// --- Error Handling Middleware ---
 app.use((req, res, next) => {
   const error = new Error(`Not Found - ${req.originalUrl}`);
   console.warn(
@@ -105,5 +117,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server berjalan di http://localhost:${port}`);
+  console.log(`🚀 Server berjalan di http://localhost:${port}`);
 });

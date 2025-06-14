@@ -1,0 +1,79 @@
+.dashboard-container {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 20px auto;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-container h1 {
+  color: #0056b3;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.dashboard-section {
+  margin-bottom: 40px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.dashboard-section h2 {
+  color: #007bff;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  font-size: 1.6em;
+}
+
+.summary-cards {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.summary-cards .card {
+  background-color: #e9f5ff; /* Light blue */
+  padding: 25px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  flex: 1;
+  min-width: 250px;
+  max-width: 30%;
+  transition: transform 0.2s ease;
+}
+
+.summary-cards .card:hover {
+  transform: translateY(-5px);
+}
+
+.summary-cards .card h3 {
+  color: #0056b3;
+  margin-bottom: 10px;
+  font-size: 1.3em;
+}
+
+.summary-cards .card p {
+  font-size: 2.2em;
+  font-weight: bold;
+  color: #007bff;
+}
+
+/* Status indicators */
+.status-available {
+  color: #28a745; /* Green */
+  font-weight: bold;
+}
+
+.status-booked,
+.status-unavailable {
+  color: #dc3545; /* Red */
+  font-weight: bold;
+}
