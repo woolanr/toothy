@@ -7,6 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const pasienRoutes = require("./routes/pasienRoutes");
 const doctorRoutes = require("./routes/doctorRoutes");
+const perawatRoutes = require("./routes/perawatRoutes");
 
 const app = express();
 const port = 3000;
@@ -78,10 +79,15 @@ app.get("/admin/dashboard", (req, res) => {
   res.render("admin/dashboard");
 });
 
-// --- Doctor Pages ---
+// Doctor Pages
 app.get("/dokter/dashboard", (req, res) => {
   console.log("Serving dokter dashboard page.");
   res.render("doctor/dashboard");
+});
+
+// Perawat Pages
+app.get("/perawat/dashboard", (req, res) => {
+  res.render("perawat/dashboard"); // Make sure this path matches your ejs file
 });
 
 // Pasien Pages
@@ -94,6 +100,7 @@ app.use("/", authRoutes);
 app.use("/admin", adminRoutes);
 app.use("/pasien", pasienRoutes);
 app.use("/dokter", doctorRoutes);
+app.use("/perawat", perawatRoutes);
 
 // --- Error Handling Middleware ---
 app.use((req, res, next) => {

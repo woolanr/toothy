@@ -138,7 +138,7 @@ function performRedirect(userData) {
         window.location.href = "/dokter/dashboard";
         break;
       case 3: // Staff
-        window.location.href = "/staff/dashboard";
+        window.location.href = "/perawat/dashboard";
         break;
       case 4: // Pasien
         window.location.href = "/pasien/dashboard";

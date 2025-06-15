@@ -3,14 +3,11 @@ const express = require("express");
 const router = express.Router();
 const doctorController = require("../controllers/doctorController");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
-const User = require("../models/userModel"); // Import User model
+const User = require("../models/userModel");
 
-// Define role for doctor (assuming id_level_user = 2 for doctors)
 const DOCTOR_ROLE_ID = 2;
 
-// Middleware to ensure doctor-specific IDs are available
 const getDoctorInfo = async (req, res, next) => {
-  // req.user should be populated by 'protect' middleware
   if (
     !req.user ||
     !req.user.id_user ||
@@ -26,14 +23,13 @@ const getDoctorInfo = async (req, res, next) => {
     });
   }
 
-  // If id_doctor or id_profile are missing from req.user (which is the current problem), fetch them from DB
   if (!req.user.id_doctor || !req.user.id_profile) {
     console.log(
       "getDoctorInfo: Missing id_doctor or id_profile in req.user, fetching from DB for id_user:",
       req.user.id_user
     );
     try {
-      const userFullDetails = await User.findById(req.user.id_user); // User.findById joins USERS and PROFILE
+      const userFullDetails = await User.findById(req.user.id_user);
 
       if (!userFullDetails) {
         console.error(
@@ -45,9 +41,7 @@ const getDoctorInfo = async (req, res, next) => {
           .json({ message: "Informasi pengguna tidak ditemukan di database." });
       }
 
-      // Update req.user with the complete details from DB
       req.user.id_profile = userFullDetails.id_profile;
-      // For id_doctor, we need a specific lookup from the DOCTORS table
       const doctorRecord = await User.findDoctorRecordByUserId(
         req.user.id_user
       );
@@ -76,26 +70,20 @@ const getDoctorInfo = async (req, res, next) => {
       });
     }
   }
-  next(); // Continue to the next middleware or route handler
+  next();
 };
 
-// Apply protect middleware to all doctor routes
 router.use(protect);
 
-// Apply authorizeRoles middleware specifically for doctors
-router.use(authorizeRoles(DOCTOR_ROLE_ID)); // Only doctors (level 2) can access these routes
+router.use(authorizeRoles(DOCTOR_ROLE_ID));
 
-// NEW: Apply getDoctorInfo middleware after authentication and authorization
 router.use(getDoctorInfo);
 
-// Doctor Dashboard Data (Changed endpoint to avoid clash with EJS view)
 router.get("/dashboard-data", doctorController.getDashboardData);
 
-// Doctor Profile Management
 router.get("/my-profile", doctorController.getDoctorProfile);
 router.put("/my-profile", doctorController.updateDoctorProfile);
 
-// Appointment Details and Examination Module
 router.get(
   "/appointment/:id_appointment",
   doctorController.getAppointmentForExamination
@@ -105,7 +93,6 @@ router.post(
   doctorController.saveExaminationResult
 );
 
-// Doctor Schedule Management (Add/Update)
-router.post("/schedule", doctorController.manageDoctorSchedule); // Use POST for both add and update (id_schedule in body)
+router.post("/schedule", doctorController.manageDoctorSchedule);
 
 module.exports = router;

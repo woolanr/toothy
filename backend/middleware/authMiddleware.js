@@ -34,7 +34,6 @@ const protect = async (req, res, next) => {
 
       const userInDb = await User.findById(decoded.id_user);
       if (!userInDb || userInDb.id_status_valid !== 1) {
-        // Check if valid status (1)
         console.log(
           "Protect: User not found in DB or not valid with decoded ID:",
           decoded.id_user

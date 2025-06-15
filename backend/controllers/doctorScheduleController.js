@@ -1,6 +1,6 @@
 // backend/controllers/doctorScheduleController.js
-const DoctorSchedule = require("../models/doctorScheduleModel"); // Impor DoctorSchedule model
-const User = require("../models/userModel"); // Digunakan untuk validasi id_doctor
+const DoctorSchedule = require("../models/doctorScheduleModel");
+const User = require("../models/userModel");
 
 const doctorScheduleController = {
   createSchedule: async (req, res) => {
@@ -16,7 +16,6 @@ const doctorScheduleController = {
       req.body
     );
 
-    // Validasi Input Dasar
     if (!id_doctor || !hari_dalam_minggu || !waktu_mulai || !waktu_selesai) {
       return res.status(400).json({
         success: false,
@@ -26,44 +25,34 @@ const doctorScheduleController = {
 
     const day = parseInt(hari_dalam_minggu);
     if (isNaN(day) || day < 1 || day > 7) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Hari dalam minggu tidak valid (1-7).",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Hari dalam minggu tidak valid (1-7).",
+      });
     }
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d))?$/;
     if (!timeRegex.test(waktu_mulai) || !timeRegex.test(waktu_selesai)) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Format waktu tidak valid (HH:MM atau HH:MM:SS).",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Format waktu tidak valid (HH:MM atau HH:MM:SS).",
+      });
     }
     if (waktu_mulai >= waktu_selesai) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Waktu mulai harus sebelum waktu selesai.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Waktu mulai harus sebelum waktu selesai.",
+      });
     }
 
     try {
-      // Cek apakah id_doctor valid dan merupakan dokter
-      const doctorExists = await User.findDoctorById(id_doctor); // Asumsi User.findDoctorById ada
+      const doctorExists = await User.findDoctorById(id_doctor);
       if (!doctorExists) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-            message: `Dokter dengan ID ${id_doctor} tidak ditemukan.`,
-          });
+        return res.status(404).json({
+          success: false,
+          message: `Dokter dengan ID ${id_doctor} tidak ditemukan.`,
+        });
       }
 
-      // Cek bentrokan jadwal
       const hasOverlap = await DoctorSchedule.checkOverlap(
         id_doctor,
         day,
@@ -71,13 +60,11 @@ const doctorScheduleController = {
         waktu_selesai
       );
       if (hasOverlap) {
-        return res
-          .status(409)
-          .json({
-            success: false,
-            message:
-              "Jadwal yang Anda coba tambahkan bentrok dengan jadwal yang sudah ada untuk dokter ini pada hari yang sama.",
-          });
+        return res.status(409).json({
+          success: false,
+          message:
+            "Jadwal yang Anda coba tambahkan bentrok dengan jadwal yang sudah ada untuk dokter ini pada hari yang sama.",
+        });
       }
 
       const scheduleData = {
@@ -216,24 +203,19 @@ const doctorScheduleController = {
       scheduleDataToUpdate.is_available = is_available;
 
     if (Object.keys(scheduleDataToUpdate).length === 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Tidak ada data yang diberikan untuk diperbarui.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Tidak ada data yang diberikan untuk diperbarui.",
+      });
     }
 
-    // Validasi tambahan di controller
     if (scheduleDataToUpdate.hari_dalam_minggu !== undefined) {
       const day = parseInt(scheduleDataToUpdate.hari_dalam_minggu);
       if (isNaN(day) || day < 1 || day > 7) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "Hari dalam minggu tidak valid (1-7).",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "Hari dalam minggu tidak valid (1-7).",
+        });
       }
       scheduleDataToUpdate.hari_dalam_minggu = day;
     }
@@ -243,39 +225,32 @@ const doctorScheduleController = {
       scheduleDataToUpdate.waktu_mulai &&
       !timeRegex.test(scheduleDataToUpdate.waktu_mulai)
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Format waktu mulai tidak valid (HH:MM atau HH:MM:SS).",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Format waktu mulai tidak valid (HH:MM atau HH:MM:SS).",
+      });
     }
     if (
       scheduleDataToUpdate.waktu_selesai &&
       !timeRegex.test(scheduleDataToUpdate.waktu_selesai)
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Format waktu selesai tidak valid (HH:MM atau HH:MM:SS).",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Format waktu selesai tidak valid (HH:MM atau HH:MM:SS).",
+      });
     }
     if (
       scheduleDataToUpdate.waktu_mulai &&
       scheduleDataToUpdate.waktu_selesai &&
       scheduleDataToUpdate.waktu_mulai >= scheduleDataToUpdate.waktu_selesai
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Waktu mulai harus sebelum waktu selesai.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Waktu mulai harus sebelum waktu selesai.",
+      });
     }
 
     try {
-      // Ambil jadwal lama untuk mendapatkan id_doctor dan hari_dalam_minggu jika tidak diupdate
       const existingSchedule = await DoctorSchedule.findById(
         parseInt(scheduleId)
       );
@@ -302,7 +277,6 @@ const doctorScheduleController = {
           ? scheduleDataToUpdate.waktu_selesai
           : existingSchedule.waktu_selesai;
 
-      // Cek bentrokan jadwal, kecuali untuk jadwal yang sedang diupdate
       const hasOverlap = await DoctorSchedule.checkOverlap(
         currentIdDoctor,
         currentHari,
@@ -311,13 +285,11 @@ const doctorScheduleController = {
         parseInt(scheduleId)
       );
       if (hasOverlap) {
-        return res
-          .status(409)
-          .json({
-            success: false,
-            message:
-              "Jadwal yang Anda coba perbarui bentrok dengan jadwal lain yang sudah ada untuk dokter ini pada hari yang sama.",
-          });
+        return res.status(409).json({
+          success: false,
+          message:
+            "Jadwal yang Anda coba perbarui bentrok dengan jadwal lain yang sudah ada untuk dokter ini pada hari yang sama.",
+        });
       }
 
       const result = await DoctorSchedule.update(
@@ -326,13 +298,11 @@ const doctorScheduleController = {
       );
 
       if (result.affectedRows === 0) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-            message:
-              "Jadwal tidak ditemukan atau tidak ada perubahan yang dilakukan.",
-          });
+        return res.status(404).json({
+          success: false,
+          message:
+            "Jadwal tidak ditemukan atau tidak ada perubahan yang dilakukan.",
+        });
       }
 
       res.status(200).json({

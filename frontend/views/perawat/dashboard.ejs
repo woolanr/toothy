@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dasbor Staf - Happy Toothy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f3f4f6;
+      }
+      .nav-link.active {
+        background-color: #e0f2fe;
+        color: #1e40af;
+        font-weight: 600;
+      }
+      .table-responsive {
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <div id="staff-portal" class="flex h-screen">
+      <!-- Sidebar Navigation -->
+      <nav
+        class="w-64 bg-gray-800 text-white p-6 flex flex-col justify-between"
+      >
+        <div>
+          <h1 class="text-3xl font-extrabold mb-8 text-blue-300">
+            Happy Toothy
+          </h1>
+          <ul class="space-y-3">
+            <li>
+              <a
+                href="#"
+                id="nav-dashboard"
+                class="nav-link flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors duration-200 active"
+              >
+                <i class="fas fa-tachometer-alt mr-3"></i> Dasbor
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                id="nav-appointments"
+                class="nav-link flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors duration-200"
+              >
+                <i class="fas fa-calendar-check mr-3"></i> Kelola Janji Temu
+              </a>
+            </li>
+          </ul>
+        </div>
+        <button
+          id="logout-btn"
+          class="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-300 ease-in-out"
+        >
+          <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+        </button>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="flex-1 p-8 overflow-y-auto">
+        <!-- Dashboard Content -->
+        <section id="dashboard-content" class="page-content">
+          <h2 class="text-3xl font-bold text-gray-800 mb-8">
+            Ringkasan Dasbor
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-blue-100 p-6 rounded-lg shadow">
+              <h3 class="font-semibold text-blue-800">
+                Total Janji Temu Hari Ini
+              </h3>
+              <p id="summary-total" class="text-4xl font-bold">Memuat...</p>
+            </div>
+            <div class="bg-green-100 p-6 rounded-lg shadow">
+              <h3 class="font-semibold text-green-800">Pasien Check-In</h3>
+              <p id="summary-checked-in" class="text-4xl font-bold">
+                Memuat...
+              </p>
+            </div>
+            <div class="bg-yellow-100 p-6 rounded-lg shadow">
+              <h3 class="font-semibold text-yellow-800">Menunggu Konfirmasi</h3>
+              <p id="summary-pending" class="text-4xl font-bold">Memuat...</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Appointment Management Content -->
+        <section id="appointments-content" class="page-content hidden">
+          <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            Manajemen Janji Temu
+          </h2>
+          <div class="bg-white p-6 rounded-lg shadow">
+            <div
+              class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4"
+            >
+              <div class="flex items-center gap-4">
+                <input
+                  type="date"
+                  id="filter-date"
+                  class="border p-2 rounded-md"
+                />
+                <select id="filter-doctor" class="border p-2 rounded-md">
+                  <option value="">Semua Dokter</option>
+                </select>
+                <select id="filter-status" class="border p-2 rounded-md">
+                  <option value="">Semua Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+              <button
+                id="add-appointment-btn"
+                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              >
+                <i class="fas fa-plus mr-2"></i> Tambah Janji Temu
+              </button>
+            </div>
+            <div class="table-responsive">
+              <table class="w-full text-left">
+                <thead class="bg-gray-200">
+                  <tr>
+                    <th class="p-3">Pasien</th>
+                    <th class="p-3">Dokter</th>
+                    <th class="p-3">Tanggal & Waktu</th>
+                    <th class="p-3">Status</th>
+                    <th class="p-3">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="appointments-table-body">
+                  <tr>
+                    <td colspan="5" class="p-4 text-center">
+                      Memuat data janji temu...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modals -->
+    <div
+      id="modal-backdrop"
+      class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-40"
+    ></div>
+
+    <div
+      id="appointment-modal"
+      class="fixed hidden bg-white p-6 rounded-lg shadow-xl max-w-lg w-full z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+    >
+      <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-4">
+        Detail Janji Temu
+      </h3>
+      <form id="appointment-form" class="space-y-4">
+        <input type="hidden" id="modal-appointment-id" />
+        <div>
+          <label class="block text-sm font-medium">Pasien</label>
+          <input
+            type="text"
+            id="modal-patient-name"
+            required
+            class="mt-1 w-full p-2 border rounded-md"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Dokter</label>
+          <select
+            id="modal-doctor"
+            required
+            class="mt-1 w-full p-2 border rounded-md"
+          ></select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Layanan</label>
+          <select
+            id="modal-service"
+            required
+            class="mt-1 w-full p-2 border rounded-md"
+          ></select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium">Tanggal</label>
+            <input
+              type="date"
+              id="modal-date"
+              required
+              class="mt-1 w-full p-2 border rounded-md"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Waktu</label>
+            <input
+              type="time"
+              id="modal-time"
+              required
+              class="mt-1 w-full p-2 border rounded-md"
+            />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Status Janji Temu</label>
+          <select
+            id="modal-status"
+            required
+            class="mt-1 w-full p-2 border rounded-md"
+          >
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="Rescheduled">Rescheduled</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Keluhan Pasien</label>
+          <textarea
+            id="modal-notes"
+            rows="3"
+            class="mt-1 w-full p-2 border rounded-md"
+          ></textarea>
+        </div>
+        <div class="flex justify-end space-x-4">
+          <button
+            type="button"
+            id="close-modal-btn"
+            class="px-4 py-2 bg-gray-300 rounded-md"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md"
+          >
+            Simpan Perubahan
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <script src="/js/perawatDashboard.js"></script>
+  </body>
+</html>

@@ -10,15 +10,12 @@ const clinicSettingsController = require("../controllers/clinicSettingsControlle
 
 router.use(protect, authorizeRoles(1));
 
-// --- Route API untuk Halaman Admin (Render EJS, jika ada) ---
 router.get("/register", (req, res) => {
   res.render("admin/register");
 });
 
-// --- Route API untuk Dashboard Admin ---
 router.get("/dashboard-data", userController.getAdminDashboardData);
 
-// --- Rute Manajemen Pengguna ---
 router.get("/users", userController.getAllUsers);
 router.post("/users", userController.addUser);
 router.get("/users/:id", userController.getUserById);
@@ -27,14 +24,12 @@ router.delete("/users/:id", userController.deleteUser);
 router.put("/users/:id/activate", userController.activateUserAccount);
 router.put("/users/:id/verify", userController.verifyUserAccount);
 
-// --- Rute Manajemen Dokter ---
 router.get("/doctors", userController.getAllDoctors);
 router.post("/doctors", userController.createDoctor);
 router.get("/doctors/:id", userController.getDoctorByIdForEdit);
 router.put("/doctors/:id", userController.updateDoctor);
 router.put("/doctors/:id/deactivate", userController.deactivateDoctorAccount);
 
-// --- Rute Manajemen Layanan ---
 router.get("/services", serviceController.getAllServices);
 router.post("/services", serviceController.createService);
 router.get("/services/:id", serviceController.getServiceById);
@@ -42,7 +37,6 @@ router.put("/services/:id", serviceController.updateService);
 router.put("/services/:id/deactivate", serviceController.deactivateService);
 router.put("/services/:id/activate", serviceController.activateService);
 
-// --- Rute Manajemen Jadwal Dokter ---
 router.get(
   "/doctors/:doctorId/schedules",
   doctorScheduleController.getSchedulesByDoctorId
@@ -55,11 +49,9 @@ router.delete(
   doctorScheduleController.deleteSchedule
 );
 
-// --- Rute Pengaturan Klinik ---
 router.get("/settings", clinicSettingsController.getClinicSettings);
 router.put("/settings", clinicSettingsController.updateClinicSettings);
 
-// --- Route-route khusus PASIEN atau PUBLIK ---
 router.get(
   "/booking/form-data",
   protect,
@@ -81,7 +73,6 @@ router.post(
 
 router.post("/register", authController.register);
 
-// API DASHBOARD PASIEN
 router.get(
   "/pasien/dashboard-data",
   protect,
