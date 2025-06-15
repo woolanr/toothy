@@ -1,23 +1,18 @@
 // frontend/public/js/doctorDashboard.js
 document.addEventListener("DOMContentLoaded", () => {
-  // API Base URL (MUST match your backend server.js prefix for doctor routes)
-  const API_BASE_URL = "http://localhost:3000/dokter"; // /dokter prefix for all doctor API calls
+  const API_BASE_URL = "http://localhost:3000/dokter";
 
-  // --- DOM Elements ---
-  const doctorPortal = document.getElementById("doctor-portal"); // Main container for dashboard and profile
+  const doctorPortal = document.getElementById("doctor-portal");
 
-  // Navigation links
   const navDashboard = document.getElementById("nav-dashboard");
   const navProfile = document.getElementById("nav-profile");
-  const navExamination = document.getElementById("nav-examination"); // Hidden until an examination is started
+  const navExamination = document.getElementById("nav-examination");
   const logoutBtn = document.getElementById("logout-btn");
 
-  // Content Sections
   const dashboardContent = document.getElementById("dashboard-content");
   const profileContent = document.getElementById("profile-content");
   const examinationContent = document.getElementById("examination-content");
 
-  // Dashboard elements
   const upcomingAppointmentsDiv = document.getElementById(
     "upcoming-appointments"
   );
@@ -25,11 +20,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const doctorScheduleDiv = document.getElementById("doctor-schedule");
   const manageScheduleBtn = document.getElementById("manage-schedule-btn");
 
-  // Profile form elements
   const profileForm = document.getElementById("profile-form");
   const profilePicPreview = document.getElementById("profile-pic-preview");
   const fotoProfilUrlInput = document.getElementById("foto_profil_url");
-  const profilePicUploadInput = document.getElementById("profile-pic-upload"); // New: file input
+  const profilePicUploadInput = document.getElementById("profile-pic-upload");
   const namaLengkapInput = document.getElementById("nama_lengkap");
   const emailInput = document.getElementById("email");
   const noTeleponInput = document.getElementById("no_telepon");
@@ -43,7 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const ratingRata2P = document.getElementById("rating_rata2");
   const profileMessage = document.getElementById("profile-message");
 
-  // Examination form elements
   const patientNamaLengkapSpan = document.getElementById(
     "patient-nama_lengkap"
   );
@@ -59,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const patientAlamatSpan = document.getElementById("patient-alamat");
   const currentPatientProfileIdInput = document.getElementById(
     "current-patient-profile-id"
-  ); // Hidden input
+  );
   const medicalHistoryListDiv = document.getElementById("medical-history-list");
 
   const examinationForm = document.getElementById("examination-form");
@@ -79,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const scheduleModalTitle = document.getElementById("schedule-modal-title");
   const closeScheduleModalBtn = document.getElementById("close-schedule-modal");
   const scheduleForm = document.getElementById("schedule-form");
-  const modalIdSchedule = document.getElementById("modal-id-schedule"); // Hidden input for schedule ID
+  const modalIdSchedule = document.getElementById("modal-id-schedule");
   const modalHariDalamMinggu = document.getElementById(
     "modal-hari-dalam-minggu"
   );
@@ -94,89 +87,87 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalText = document.getElementById("modal-text");
   const closeMessageModalBtn = document.getElementById("close-message-modal");
 
-  // Internal state variables
-  let activeAppointmentId = null; // Store the ID of the appointment currently being examined
-  let selectedFileBase64 = null; // Stores Base64 of selected file for profile pic upload
+  let activeAppointmentId = null;
+  let selectedFileBase64 = null;
 
-  // --- Utility Functions ---
-
-  // Function to display a custom modal message instead of alert()
   function showMessageModal(message) {
     modalText.textContent = message;
     modalBackdrop.classList.remove("hidden");
     messageModal.classList.remove("hidden");
   }
 
-  // Function to hide the custom message modal
   function hideMessageModal() {
     modalBackdrop.classList.add("hidden");
     messageModal.classList.add("hidden");
   }
 
-  // Function to format date for display (YYYY-MM-DD to DD Month Bede)
+  function getDayName(dayNumber) {
+    const days = {
+      1: "Minggu",
+      2: "Senin",
+      3: "Selasa",
+      4: "Rabu",
+      5: "Kamis",
+      6: "Jumat",
+      7: "Sabtu",
+    };
+
+    const correctedDay = dayNumber == 0 ? 1 : dayNumber;
+
+    return days[correctedDay] || "Tidak Diketahui";
+  }
+
   function formatDate(dateString) {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     const options = { year: "numeric", month: "long", day: "numeric" };
-    return date.toLocaleDateString("id-ID", options); // Using Indonesian locale for month names
+    return date.toLocaleDateString("id-ID", options);
   }
 
-  // Function to format time for display (HH:MM:SS to HH:MM)
   function formatTime(timeString) {
     if (!timeString) return "N/A";
     const [hours, minutes] = timeString.split(":");
     return `${hours}:${minutes}`;
   }
 
-  // Function to get JWT token from localStorage
   function getToken() {
-    return localStorage.getItem("token"); // Assuming your token is stored as 'token'
+    return localStorage.getItem("token");
   }
 
-  // Function to remove JWT token from localStorage and redirect to login
   function logout() {
     localStorage.removeItem("token");
-    window.location.href = "/login"; // Redirect to your login page
+    window.location.href = "/login";
   }
 
-  // --- View Management ---
-
-  // Handles showing the correct page content and updating active navigation link
   function showPage(pageId, appointmentId = null) {
-    // Hide all content sections first
     document.querySelectorAll(".page-content").forEach((section) => {
       section.classList.add("hidden");
     });
-    // Deactivate all nav links
     document.querySelectorAll(".nav-link").forEach((link) => {
       link.classList.remove("active");
     });
 
-    // Show the requested content section and activate its nav link
     if (pageId === "dashboard") {
       dashboardContent.classList.remove("hidden");
       navDashboard.classList.add("active");
-      fetchDashboardData(); // Call the data fetch function
-      navExamination.classList.add("hidden"); // Hide examination link unless actively in exam
-      activeAppointmentId = null; // Clear active appointment
+      fetchDashboardData();
+      navExamination.classList.add("hidden");
+      activeAppointmentId = null;
     } else if (pageId === "profile") {
       profileContent.classList.remove("hidden");
       navProfile.classList.add("active");
-      fetchDoctorProfile(); // Call the profile fetch function
+      fetchDoctorProfile();
       navExamination.classList.add("hidden");
       activeAppointmentId = null;
     } else if (pageId === "examination" && appointmentId) {
       examinationContent.classList.remove("hidden");
-      navExamination.classList.remove("hidden"); // Show examination link
+      navExamination.classList.remove("hidden");
       navExamination.classList.add("active");
-      activeAppointmentId = appointmentId; // Set active appointment
-      loadExaminationModule(appointmentId); // Load examination data
+      activeAppointmentId = appointmentId;
+      loadExaminationModule(appointmentId);
     }
   }
 
-  // --- Event Listeners ---
-
-  // Navigation clicks
   navDashboard.addEventListener("click", (e) => {
     e.preventDefault();
     showPage("dashboard");
@@ -187,81 +178,87 @@ document.addEventListener("DOMContentLoaded", () => {
     showPage("profile");
   });
 
-  // Logout button
   logoutBtn.addEventListener("click", logout);
 
-  // Profile Picture Upload Preview
   profilePicUploadInput.addEventListener("change", (event) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        profilePicPreview.src = e.target.result; // Display local preview
-        fotoProfilUrlInput.value = ""; // Clear URL input if file is selected
-        selectedFileBase64 = e.target.result; // Store Base64 string
+        profilePicPreview.src = e.target.result;
+        fotoProfilUrlInput.value = "";
+        selectedFileBase64 = e.target.result;
       };
       reader.readAsDataURL(file);
     } else {
       profilePicPreview.src =
         fotoProfilUrlInput.value ||
-        "https://placehold.co/100x100/A0AEC0/FFFFFF?text=No+Pic"; // Fallback to current URL or placeholder
-      selectedFileBase64 = null; // Clear Base64 if no file
+        "https://placehold.co/100x100/A0AEC0/FFFFFF?text=No+Pic";
+      selectedFileBase64 = null;
     }
   });
 
-  // If user types a URL, clear the file input
   fotoProfilUrlInput.addEventListener("input", () => {
-    profilePicUploadInput.value = null; // Clear file input
-    selectedFileBase64 = null; // Clear Base64
+    profilePicUploadInput.value = null;
+    selectedFileBase64 = null;
     profilePicPreview.src =
       fotoProfilUrlInput.value ||
-      "https://placehold.co/100x100/A0AEC0/FFFFFF?text=No+Pic"; // Update preview from URL
+      "https://placehold.co/100x100/A0AEC0/FFFFFF?text=No+Pic";
   });
 
-  // Manage Schedule Button (opens modal for adding new schedule)
   manageScheduleBtn.addEventListener("click", () => {
-    // Reset modal form for adding new entry
     modalIdSchedule.value = "";
     scheduleModalTitle.textContent = "Add New Schedule Entry";
-    scheduleForm.reset(); // Clear form fields
-    modalIsAvailable.value = "1"; // Default to available
-    scheduleModalMessage.textContent = ""; // Clear previous messages
+    scheduleForm.reset();
+    modalIsAvailable.value = "1";
+    scheduleModalMessage.textContent = "";
 
     modalBackdrop.classList.remove("hidden");
     scheduleModal.classList.remove("hidden");
   });
 
-  // Close Schedule Modal button
   closeScheduleModalBtn.addEventListener("click", () => {
     modalBackdrop.classList.add("hidden");
     scheduleModal.classList.add("hidden");
   });
 
-  // Close Message Modal button
   closeMessageModalBtn.addEventListener("click", hideMessageModal);
 
-  // Schedule Form Submission (Add or Update)
   scheduleForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    const dayNameToNumber = {
+      Minggu: 1,
+      Senin: 2,
+      Selasa: 3,
+      Rabu: 4,
+      Kamis: 5,
+      Jumat: 6,
+      Sabtu: 7,
+    };
+    const selectedDayName = modalHariDalamMinggu.value;
+    const hari_dalam_minggu = dayNameToNumber[selectedDayName];
+
     const id_schedule = modalIdSchedule.value
       ? parseInt(modalIdSchedule.value)
       : null;
-    const hari_dalam_minggu = modalHariDalamMinggu.value;
     const waktu_mulai = modalWaktuMulai.value;
     const waktu_selesai = modalWaktuSelesai.value;
     const is_available = parseInt(modalIsAvailable.value);
 
     const payload = {
-      id_schedule, // Will be null for new, or ID for update
+      id_schedule,
       hari_dalam_minggu,
       waktu_mulai,
       waktu_selesai,
-      is_available: is_available === 1, // Convert to boolean for backend
+      is_available: is_available === 1,
     };
+
+    console.log("Sending this payload to the server:", payload);
 
     try {
       const response = await fetch(`${API_BASE_URL}/schedule`, {
-        method: "POST", // Backend uses POST for both add and update
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${getToken()}`,
@@ -271,9 +268,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await response.json();
       if (response.ok) {
-        showMessageModal(data.message); // Show success message
-        closeScheduleModalBtn.click(); // Close the modal
-        fetchDashboardData(); // Refresh dashboard data
+        showMessageModal(data.message);
+        closeScheduleModalBtn.click();
+        fetchDashboardData();
       } else {
         scheduleModalMessage.textContent =
           data.message || "Failed to manage schedule.";
@@ -288,13 +285,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Profile Form Submission
   profileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    let profilePicValue = fotoProfilUrlInput.value; // Default to URL input
+    let profilePicValue = fotoProfilUrlInput.value;
     if (selectedFileBase64) {
-      profilePicValue = selectedFileBase64; // If file selected, use its Base64
+      profilePicValue = selectedFileBase64;
     }
 
     const profileData = {
@@ -308,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
       spesialisasi: spesialisasiInput.value,
       lisensi_no: lisensiNoInput.value,
       pengalaman_tahun: parseInt(pengalamanTahunInput.value) || 0,
-      foto_profil_url: profilePicValue, // Send selected file Base64 or URL
+      foto_profil_url: profilePicValue,
     };
 
     try {
@@ -321,17 +317,15 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(profileData),
       });
 
-      // Always try to parse JSON, even for non-OK responses, as backend might send error JSON
       const data = await response.json();
-      console.log("Profile update response data:", data); // Log the full response
+      console.log("Profile update response data:", data);
 
       if (response.ok) {
-        // Show success message using the modal
         showMessageModal(data.message || "Profil berhasil diperbarui!");
-        profileMessage.textContent = ""; // Clear form-specific message
-        fetchDoctorProfile(); // Refresh data after update, especially profile pic preview
-        selectedFileBase64 = null; // Clear selected file state after successful upload
-        profilePicUploadInput.value = null; // Clear file input element
+        profileMessage.textContent = "";
+        fetchDoctorProfile();
+        selectedFileBase64 = null;
+        profilePicUploadInput.value = null;
       } else {
         profileMessage.textContent =
           data.message || "Gagal memperbarui profil.";
@@ -340,7 +334,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       console.error("Profile update failed:", error);
-      // Check if the error is a SyntaxError (e.g., if response is not JSON)
       if (error instanceof SyntaxError) {
         profileMessage.textContent =
           "Terjadi kesalahan dalam memproses respons server. Respons mungkin bukan JSON yang valid.";
@@ -353,7 +346,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Examination Form Submission
   examinationForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -364,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const examinationData = {
-      id_profile: parseInt(currentPatientProfileIdInput.value), // Patient's id_profile
+      id_profile: parseInt(currentPatientProfileIdInput.value),
       chief_complaint: chiefComplaintInput.value,
       dental_examination_findings: dentalExaminationFindingsInput.value,
       diagnosis: diagnosisInput.value,
@@ -389,8 +381,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
-        showMessageModal(data.message); // Show success message
-        showPage("dashboard"); // Go back to dashboard after saving
+        showMessageModal(data.message);
+        showPage("dashboard");
       } else {
         examinationMessage.textContent =
           data.message || "Failed to save examination.";
@@ -401,16 +393,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- Data Fetching and Rendering Functions ---
-
-  // Initial check for login state and showing relevant page
   function initializePage() {
     if (getToken()) {
       doctorPortal.classList.remove("hidden");
-      showPage("dashboard"); // Initially show dashboard
+      showPage("dashboard");
     } else {
       console.log("No token found. Redirecting to login.");
-      window.location.href = "/login"; // Force client-side redirect to login
+      window.location.href = "/login";
     }
   }
 
@@ -423,7 +412,6 @@ document.addEventListener("DOMContentLoaded", () => {
       '<p class="text-gray-600 text-sm">Loading schedule...</p>';
 
     try {
-      // IMPORTANT: Calling the new API endpoint /dokter/dashboard-data
       const response = await fetch(`${API_BASE_URL}/dashboard-data`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
@@ -432,11 +420,11 @@ document.addEventListener("DOMContentLoaded", () => {
         showMessageModal(
           "Session expired or unauthorized. Please log in again."
         );
-        logout(); // Clear token and redirect
+        logout();
         return;
       }
 
-      const data = await response.json(); // Now this should be valid JSON
+      const data = await response.json();
 
       if (response.ok) {
         renderUpcomingAppointments(data.upcomingAppointments);
@@ -452,7 +440,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function fetchDoctorProfile() {
-    profileMessage.textContent = ""; // Clear previous messages
+    profileMessage.textContent = "";
     try {
       const response = await fetch(`${API_BASE_URL}/my-profile`, {
         headers: { Authorization: `Bearer ${getToken()}` },
@@ -469,10 +457,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Parse rating_rata2 to ensure it's a number before calling toFixed
         const rating = parseFloat(data.rating_rata2);
 
-        // Populate profile form fields
         fotoProfilUrlInput.value = data.foto_profil_url || "";
         profilePicPreview.src =
           data.foto_profil_url ||
@@ -483,22 +469,19 @@ document.addEventListener("DOMContentLoaded", () => {
         tanggalLahirInput.value = data.tanggal_lahir
           ? data.tanggal_lahir.split("T")[0]
           : ""; // Format for date input
-        jenisKelaminSelect.value = data.jenis_kelamin || ""; // Set selected value for dropdown
+        jenisKelaminSelect.value = data.jenis_kelamin || "";
         nikInput.value = data.nik || "";
         alamatInput.value = data.alamat || "";
         spesialisasiInput.value = data.spesialisasi || "";
         lisensiNoInput.value = data.lisensi_no || "";
         pengalamanTahunInput.value = data.pengalaman_tahun || "";
-        // Updated line for rating_rata2
         ratingRata2P.textContent = isNaN(rating) ? "N/A" : rating.toFixed(1);
 
-        // Handle broken image links for profile picture
         profilePicPreview.onerror = () => {
           profilePicPreview.src =
             "https://placehold.co/100x100/A0AEC0/FFFFFF?text=No+Pic";
         };
 
-        // Clear the file input and selected Base64 state on profile load
         profilePicUploadInput.value = null;
         selectedFileBase64 = null;
       } else {
@@ -544,7 +527,6 @@ document.addEventListener("DOMContentLoaded", () => {
                   appt.status_janji
                 }</span></p>
             `;
-      // Add click listener to open examination module
       apptElement.addEventListener("click", () =>
         showPage("examination", appt.id_appointment)
       );
@@ -583,7 +565,6 @@ document.addEventListener("DOMContentLoaded", () => {
                   patient.status_janji
                 }</span></p>
             `;
-      // Add click listener to open examination module
       queueElement.addEventListener("click", () =>
         showPage("examination", patient.id_appointment)
       );
@@ -598,9 +579,6 @@ document.addEventListener("DOMContentLoaded", () => {
         '<p class="text-gray-600">No schedule available. Click "Manage Schedule" to add.</p>';
       return;
     }
-    // No need to sort by day of week if backend does it, but useful for frontend-only sorting
-    // const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    // schedule.sort((a, b) => dayOrder.indexOf(a.hari_dalam_minggu) - dayOrder.indexOf(b.hari_dalam_minggu));
 
     schedule.forEach((entry) => {
       const scheduleElement = document.createElement("div");
@@ -617,23 +595,22 @@ document.addEventListener("DOMContentLoaded", () => {
         ? "text-green-600"
         : "text-red-600";
       scheduleElement.innerHTML = `
-                <p class="font-semibold text-gray-800">${
-                  entry.hari_dalam_minggu
-                }</p>
-                <p class="text-sm text-gray-600">From ${formatTime(
-                  entry.waktu_mulai
-                )} to ${formatTime(entry.waktu_selesai)}</p>
-                <p class="text-xs ${availabilityColor}">Status: ${availabilityText}</p>
-            `;
-      // Add click listener to populate and open modal for editing
+        <p class="font-semibold text-gray-800">${getDayName(
+          entry.hari_dalam_minggu
+        )}</p>
+        <p class="text-sm text-gray-600">From ${formatTime(
+          entry.waktu_mulai
+        )} to ${formatTime(entry.waktu_selesai)}</p>
+        <p class="text-xs ${availabilityColor}">Status: ${availabilityText}</p>
+      `;
       scheduleElement.addEventListener("click", () => {
         modalIdSchedule.value = entry.id_schedule;
         scheduleModalTitle.textContent = "Edit Schedule Entry";
-        modalHariDalamMinggu.value = entry.hari_dalam_minggu;
+        modalHariDalamMinggu.value = getDayName(entry.hari_dalam_minggu);
         modalWaktuMulai.value = entry.waktu_mulai;
         modalWaktuSelesai.value = entry.waktu_selesai;
         modalIsAvailable.value = entry.is_available ? "1" : "0";
-        scheduleModalMessage.textContent = ""; // Clear message
+        scheduleModalMessage.textContent = "";
 
         modalBackdrop.classList.remove("hidden");
         scheduleModal.classList.remove("hidden");
@@ -643,7 +620,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadExaminationModule(appointmentId) {
-    // Reset patient data and medical history sections
     patientNamaLengkapSpan.textContent = "Loading...";
     patientTanggalLahirSpan.textContent = "";
     patientJenisKelaminSpan.textContent = "";
@@ -651,11 +627,10 @@ document.addEventListener("DOMContentLoaded", () => {
     patientEmailSpan.textContent = "";
     patientNikSpan.textContent = "";
     patientAlamatSpan.textContent = "";
-    currentPatientProfileIdInput.value = ""; // Clear hidden input
+    currentPatientProfileIdInput.value = "";
     medicalHistoryListDiv.innerHTML =
       '<p class="text-gray-600 text-sm">Loading medical history...</p>';
 
-    // Reset examination form fields
     examinationForm.reset();
     examinationMessage.textContent = "";
 
@@ -679,9 +654,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         const { appointment, medicalHistory } = data;
-        currentPatientProfileIdInput.value = appointment.id_profile; // Set patient's id_profile for saving examination
+        currentPatientProfileIdInput.value = appointment.id_profile;
 
-        // Populate Patient Data
         patientNamaLengkapSpan.textContent = appointment.patient_name;
         patientTanggalLahirSpan.textContent = appointment.tanggal_lahir
           ? formatDate(appointment.tanggal_lahir)
@@ -693,7 +667,6 @@ document.addEventListener("DOMContentLoaded", () => {
         patientNikSpan.textContent = appointment.nik || "N/A";
         patientAlamatSpan.textContent = appointment.alamat || "N/A";
 
-        // Populate Medical History
         medicalHistoryListDiv.innerHTML = "";
         if (medicalHistory.length === 0) {
           medicalHistoryListDiv.innerHTML =
@@ -735,11 +708,9 @@ document.addEventListener("DOMContentLoaded", () => {
             medicalHistoryListDiv.appendChild(recordElement);
           });
         }
-        // If the appointment status is already 'Examined', you might want to pre-fill the form
-        // or make it read-only. This example assumes a new examination or an overwrite.
       } else {
         showMessageModal(data.message || "Failed to load appointment details.");
-        showPage("dashboard"); // Go back if data not found
+        showPage("dashboard");
       }
     } catch (error) {
       console.error("Error fetching appointment details:", error);
@@ -748,6 +719,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- Initial Page Load ---
   initializePage();
 });

@@ -1,37 +1,32 @@
 <!-- frontend/views/doctor/dashboard.ejs -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Doctor Dashboard - Happy Toothy</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Dokter Dashboard - Happy Toothy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <!-- Font Awesome for icons -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
-    <!-- Your existing custom CSS, if any. Ensure it's included -->
     <link rel="stylesheet" href="/css/style.css" />
     <style>
-      /* Ensuring body fills the entire viewport and removes default margins/padding */
       body {
         font-family: "Inter", sans-serif;
-        background-color: #f3f4f6; /* Light gray background */
-        min-height: 100vh; /* Make body at least full viewport height */
-        margin: 0; /* Remove default browser margin */
-        padding: 0; /* Remove default browser padding */
-        display: flex; /* Make body a flex container to hold #doctor-portal */
-        flex-direction: column; /* Stack children vertically */
-        width: 100vw; /* Ensure body takes full viewport width */
-        overflow-x: hidden; /* Prevent horizontal scrollbar if any content overflows */
+        background-color: #f3f4f6;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        width: 100vw;
+        overflow-x: hidden;
       }
-      /* Custom scrollbar for better aesthetics */
       ::-webkit-scrollbar {
         width: 8px;
       }
@@ -46,64 +41,56 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #888;
       }
-      /* Active navigation link style */
       .nav-link.active {
-        background-color: #e0f2fe; /* Light blue */
-        color: #1e40af; /* Darker blue */
+        background-color: #e0f2fe;
+        color: #1e40af;
         font-weight: 600;
       }
-      /* Page content sections */
       .page-content {
-        flex-grow: 1; /* Allow content sections to grow and fill available space */
-        padding-bottom: 2rem; /* Add some padding at the bottom */
+        flex-grow: 1;
+        padding-bottom: 2rem;
       }
-      /* Main Doctor Portal container: Ensure it truly fills the entire browser window */
       #doctor-portal {
-        width: 100vw; /* Take full viewport width */
-        min-height: 100vh; /* Take full viewport height */
-        border-radius: 0; /* No rounded corners for a full website look */
-        box-shadow: none; /* No shadow for a flat website look */
-        margin: 0; /* Override any lingering margins */
-        display: flex; /* Make it a flex container for its children (nav and main) */
-        flex-grow: 1; /* Allow it to grow and fill body's flex space */
+        width: 100vw;
+        min-height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+        margin: 0;
+        display: flex;
+        flex-grow: 1;
       }
-      /* Left Navigation Bar: Ensure it also takes full height and no extra styles */
       nav {
-        min-height: 100vh; /* Make sidebar span full height */
-        border-radius: 0; /* No rounded corners for a full website look */
-        flex-shrink: 0; /* Prevent sidebar from shrinking */
+        min-height: 100vh;
+        border-radius: 0;
+        flex-shrink: 0;
       }
-      /* Main Content Area: Ensure its padding is applied within the content */
       main {
-        flex-grow: 1; /* Allow main content area to take remaining space */
-        padding: 2rem; /* Consistent padding around content */
-        overflow-y: auto; /* Allow vertical scrolling if content overflows */
+        flex-grow: 1;
+        padding: 2rem;
+        overflow-y: auto;
       }
 
-      /* Modal specific styles for centering and visibility */
-      /* These styles make modals centered within the viewport, ensuring they appear on top of backdrop */
       #modal-backdrop {
         position: fixed;
-        inset: 0; /* Equivalent to top:0;left:0;bottom:0;right:0; */
-        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
         z-index: 40;
       }
       #schedule-modal {
-        position: fixed; /* Explicitly fixed for z-index to work reliably */
+        position: fixed;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%); /* Classic centering technique */
+        transform: translate(-50%, -50%);
         background-color: white;
         padding: 1.5rem;
         border-radius: 0.5rem;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-          0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Tailwind's shadow-xl */
-        z-index: 50; /* Higher than backdrop */
-        max-width: 28rem; /* Tailwind max-w-md */
+          0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        z-index: 50;
+        max-width: 28rem;
         width: 100%;
       }
 
-      /* Message modal: Now without 'hidden' class initially. JavaScript will control its visibility. */
       #message-modal {
         position: fixed;
         top: 50%;
@@ -122,9 +109,7 @@
     </style>
   </head>
   <body class="">
-    <!-- The main #doctor-portal div is now directly the body's child and will fill the screen -->
     <div id="doctor-portal" class="flex flex-col md:flex-row w-full bg-white">
-      <!-- Left Navigation Bar -->
       <nav
         class="w-full md:w-64 bg-gray-800 text-white p-6 flex flex-col justify-between"
       >
@@ -150,7 +135,7 @@
                 id="nav-profile"
                 class="nav-link flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors duration-200"
               >
-                <i class="fas fa-user-circle mr-3"></i> My Profile
+                <i class="fas fa-user-circle mr-3"></i> Profil Saya
               </a>
             </li>
             <li>
@@ -159,84 +144,77 @@
                 id="nav-examination"
                 class="nav-link hidden flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors duration-200"
               >
-                <i class="fas fa-stethoscope mr-3"></i> Examination
+                <i class="fas fa-stethoscope mr-3"></i> Pemeriksaan
               </a>
             </li>
-            <!-- Add more navigation links here -->
           </ul>
         </div>
         <button
           id="logout-btn"
           class="flex items-center justify-center mt-6 md:mt-0 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-300 ease-in-out"
         >
-          <i class="fas fa-sign-out-alt mr-2"></i> Logout
+          <i class="fas fa-sign-out-alt mr-2"></i> Keluar
         </button>
       </nav>
 
-      <!-- Main Content Area -->
       <main class="flex-1 p-8 overflow-y-auto">
-        <!-- Dashboard Section (Visible by default) -->
         <section id="dashboard-content" class="page-content">
           <h2 class="text-3xl font-bold text-gray-800 mb-8">
-            Dashboard Overview
+            Ringkasan Dashboard
           </h2>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Today's/Upcoming Appointments -->
             <div
               class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg shadow-inner"
             >
               <h3 class="text-xl font-semibold text-blue-800 mb-4">
-                Upcoming Appointments
+                Janji Temu Akan Datang
               </h3>
               <div
                 id="upcoming-appointments"
                 class="space-y-3 max-h-80 overflow-y-auto pr-2"
               >
-                <p class="text-gray-600 text-sm">Loading appointments...</p>
+                <p class="text-gray-600 text-sm">Memuat janji temu...</p>
               </div>
             </div>
 
-            <!-- Patient Queue -->
             <div
               class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg shadow-inner"
             >
               <h3 class="text-xl font-semibold text-green-800 mb-4">
-                Patient Queue Today
+                Antrian Pasien Hari Ini
               </h3>
               <div
                 id="patient-queue"
                 class="space-y-3 max-h-80 overflow-y-auto pr-2"
               >
-                <p class="text-gray-600 text-sm">Loading queue...</p>
+                <p class="text-gray-600 text-sm">Memuat antrian...</p>
               </div>
             </div>
 
-            <!-- Private Practice Schedule -->
             <div
               class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg shadow-inner"
             >
               <h3 class="text-xl font-semibold text-purple-800 mb-4">
-                My Weekly Schedule
+                Jadwal Mingguan Saya
               </h3>
               <div
                 id="doctor-schedule"
                 class="space-y-3 max-h-80 overflow-y-auto pr-2"
               >
-                <p class="text-gray-600 text-sm">Loading schedule...</p>
+                <p class="text-gray-600 text-sm">Memuat jadwal...</p>
               </div>
               <button
                 id="manage-schedule-btn"
                 class="mt-6 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-300 ease-in-out"
               >
-                Manage Schedule
+                Kelola Jadwal
               </button>
             </div>
           </div>
         </section>
 
-        <!-- My Profile Section (Initially hidden) -->
         <section id="profile-content" class="page-content hidden">
-          <h2 class="text-3xl font-bold text-gray-800 mb-8">My Profile</h2>
+          <h2 class="text-3xl font-bold text-gray-800 mb-8">Profil Saya</h2>
           <form
             id="profile-form"
             class="space-y-6 bg-white p-8 rounded-lg shadow-lg"
@@ -248,29 +226,29 @@
                 id="profile-pic-preview"
                 class="w-24 h-24 rounded-full object-cover shadow-md"
                 src="https://placehold.co/100x100/A0AEC0/FFFFFF?text=No+Pic"
-                alt="Profile Picture"
+                alt="Foto Profil"
               />
               <div class="w-full">
                 <label
                   for="foto_profil_url"
                   class="block text-sm font-medium text-gray-700 mb-1"
-                  >Profile Picture URL (or Upload)</label
+                  >URL Foto Profil (atau Unggah)</label
                 >
                 <input
                   type="text"
                   id="foto_profil_url"
-                  placeholder="Enter image URL"
+                  placeholder="Masukkan URL gambar"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
                 <p class="text-xs text-gray-500 mt-1">
-                  Direct link to your profile image (e.g., from Imgur,
+                  Link langsung ke gambar profil Anda (misal: dari Imgur,
                   Cloudinary).
                 </p>
 
                 <label
                   for="profile-pic-upload"
                   class="block text-sm font-medium text-gray-700 mt-4 mb-1"
-                  >Upload New Picture</label
+                  >Unggah Foto Baru</label
                 >
                 <input
                   type="file"
@@ -279,8 +257,7 @@
                   class="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer bg-gray-50 focus:outline-none"
                 />
                 <p class="text-xs text-gray-500 mt-1">
-                  Select an image from your device for preview and temporary
-                  Base64 storage.
+                  Pilih gambar dari perangkat Anda.
                 </p>
               </div>
             </div>
@@ -290,7 +267,7 @@
                 <label
                   for="nama_lengkap"
                   class="block text-sm font-medium text-gray-700"
-                  >Full Name</label
+                  >Nama Lengkap</label
                 >
                 <input
                   type="text"
@@ -316,7 +293,7 @@
                 <label
                   for="no_telepon"
                   class="block text-sm font-medium text-gray-700"
-                  >Phone Number</label
+                  >Nomor Telepon</label
                 >
                 <input
                   type="text"
@@ -328,7 +305,7 @@
                 <label
                   for="tanggal_lahir"
                   class="block text-sm font-medium text-gray-700"
-                  >Date of Birth</label
+                  >Tanggal Lahir</label
                 >
                 <input
                   type="date"
@@ -340,7 +317,7 @@
                 <label
                   for="jenis_kelamin"
                   class="block text-sm font-medium text-gray-700"
-                  >Gender</label
+                  >Jenis Kelamin</label
                 >
                 <select
                   id="jenis_kelamin"
@@ -353,7 +330,7 @@
               </div>
               <div>
                 <label for="nik" class="block text-sm font-medium text-gray-700"
-                  >NIK (National ID)</label
+                  >NIK</label
                 >
                 <input
                   type="text"
@@ -367,7 +344,7 @@
               <label
                 for="alamat"
                 class="block text-sm font-medium text-gray-700"
-                >Address</label
+                >Alamat</label
               >
               <textarea
                 id="alamat"
@@ -381,7 +358,7 @@
                 <label
                   for="spesialisasi"
                   class="block text-sm font-medium text-gray-700"
-                  >Specialization</label
+                  >Spesialisasi</label
                 >
                 <input
                   type="text"
@@ -393,7 +370,7 @@
                 <label
                   for="lisensi_no"
                   class="block text-sm font-medium text-gray-700"
-                  >License Number</label
+                  >Nomor Lisensi</label
                 >
                 <input
                   type="text"
@@ -405,7 +382,7 @@
                 <label
                   for="pengalaman_tahun"
                   class="block text-sm font-medium text-gray-700"
-                  >Years of Experience</label
+                  >Tahun Pengalaman</label
                 >
                 <input
                   type="number"
@@ -416,7 +393,7 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700"
-                  >Average Rating</label
+                  >Rating Rata-rata</label
                 >
                 <p
                   id="rating_rata2"
@@ -431,74 +408,70 @@
               type="submit"
               class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-300 ease-in-out"
             >
-              Save Profile
+              Simpan Profil
             </button>
             <p id="profile-message" class="text-red-500 text-sm mt-2"></p>
           </form>
         </section>
 
-        <!-- Examination Module Section (Initially hidden) -->
         <section id="examination-content" class="page-content hidden">
           <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">
-            Patient Examination
+            Pemeriksaan Pasien
           </h2>
           <div
             class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-gray-50 p-6 rounded-md shadow-sm"
           >
-            <!-- Patient Data -->
             <div class="bg-blue-50 p-4 rounded-md shadow-sm">
               <h3 class="text-lg font-semibold text-blue-700 mb-2">
-                Patient Data
+                Data Pasien
               </h3>
               <p>
-                <strong>Name:</strong> <span id="patient-nama_lengkap"></span>
+                <strong>Nama:</strong> <span id="patient-nama_lengkap"></span>
               </p>
               <p>
-                <strong>DOB:</strong> <span id="patient-tanggal_lahir"></span>
+                <strong>Tgl. Lahir:</strong>
+                <span id="patient-tanggal_lahir"></span>
               </p>
               <p>
-                <strong>Gender:</strong>
+                <strong>Kelamin:</strong>
                 <span id="patient-jenis_kelamin"></span>
               </p>
               <p>
-                <strong>Contact:</strong> <span id="patient-no_telepon"></span>
+                <strong>Kontak:</strong> <span id="patient-no_telepon"></span>
               </p>
               <p><strong>Email:</strong> <span id="patient-email"></span></p>
               <p><strong>NIK:</strong> <span id="patient-nik"></span></p>
-              <p><strong>Address:</strong> <span id="patient-alamat"></span></p>
+              <p><strong>Alamat:</strong> <span id="patient-alamat"></span></p>
               <input type="hidden" id="current-patient-profile-id" />
-              <!-- To store id_profile for saving -->
             </div>
 
-            <!-- Patient Medical History -->
             <div
               class="bg-green-50 p-4 rounded-md shadow-sm max-h-60 overflow-y-auto"
             >
               <h3 class="text-lg font-semibold text-green-700 mb-2">
-                Medical History
+                Riwayat Medis
               </h3>
               <div id="medical-history-list" class="space-y-3">
                 <p class="text-gray-600 text-sm">
-                  No previous medical history available.
+                  Tidak ada riwayat medis sebelumnya.
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Examination Form -->
           <form
             id="examination-form"
             class="space-y-4 bg-white p-8 rounded-lg shadow-lg"
           >
             <h3 class="text-xl font-semibold text-gray-800 mb-4">
-              Examination Details
+              Detail Pemeriksaan
             </h3>
 
             <div>
               <label
                 for="chief_complaint"
                 class="block text-sm font-medium text-gray-700"
-                >Chief Complaint</label
+                >Keluhan Utama</label
               >
               <textarea
                 id="chief_complaint"
@@ -510,7 +483,7 @@
               <label
                 for="dental_examination_findings"
                 class="block text-sm font-medium text-gray-700"
-                >Physical/Dental Examination Findings</label
+                >Temuan Pemeriksaan Fisik/Gigi</label
               >
               <textarea
                 id="dental_examination_findings"
@@ -522,7 +495,7 @@
               <label
                 for="diagnosis"
                 class="block text-sm font-medium text-gray-700"
-                >Diagnosis</label
+                >Diagnosa</label
               >
               <textarea
                 id="diagnosis"
@@ -534,7 +507,7 @@
               <label
                 for="treatment_plan"
                 class="block text-sm font-medium text-gray-700"
-                >Treatment Plan / Analysis</label
+                >Rencana Perawatan / Analisa</label
               >
               <textarea
                 id="treatment_plan"
@@ -546,7 +519,7 @@
               <label
                 for="actions_taken"
                 class="block text-sm font-medium text-gray-700"
-                >Actions Taken (e.g., procedures, tests)</label
+                >Tindakan yang Dilakukan</label
               >
               <textarea
                 id="actions_taken"
@@ -558,7 +531,7 @@
               <label
                 for="doctor_notes"
                 class="block text-sm font-medium text-gray-700"
-                >Additional Doctor's Notes</label
+                >Catatan Tambahan Dokter</label
               >
               <textarea
                 id="doctor_notes"
@@ -571,7 +544,7 @@
               type="submit"
               class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-300 ease-in-out"
             >
-              Save Examination Result & Complete
+              Simpan Hasil & Selesaikan Pemeriksaan
             </button>
             <p id="examination-message" class="text-red-500 text-sm mt-2"></p>
           </form>
@@ -579,8 +552,6 @@
       </main>
     </div>
 
-    <!-- Modals (for schedule change request and general messages) -->
-    <!-- Explicitly defining fixed positioning and high z-index to ensure visibility -->
     <div
       id="modal-backdrop"
       class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-40"
@@ -594,30 +565,30 @@
         id="schedule-modal-title"
         class="text-xl font-bold text-gray-800 mb-4"
       >
-        Manage Schedule Entry
+        Kelola Jadwal
       </h3>
       <form id="schedule-form" class="space-y-4">
         <input type="hidden" id="modal-id-schedule" />
-        <!-- Hidden input for schedule ID -->
         <div>
           <label
             for="modal-hari-dalam-minggu"
             class="block text-sm font-medium text-gray-700"
-            >Day of Week</label
+            >Hari</label
           >
+          <!-- THIS IS THE FIXED DROPDOWN -->
           <select
             id="modal-hari-dalam-minggu"
             required
             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
           >
-            <option value="">Select Day</option>
-            <option value="Monday">Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Thursday">Thursday</option>
-            <option value="Friday">Friday</option>
-            <option value="Saturday">Saturday</option>
-            <option value="Sunday">Sunday</option>
+            <option value="">Pilih Hari</option>
+            <option value="Senin">Senin</option>
+            <option value="Selasa">Selasa</option>
+            <option value="Rabu">Rabu</option>
+            <option value="Kamis">Kamis</option>
+            <option value="Jumat">Jumat</option>
+            <option value="Sabtu">Sabtu</option>
+            <option value="Minggu">Minggu</option>
           </select>
         </div>
         <div class="grid grid-cols-2 gap-4">
@@ -625,7 +596,7 @@
             <label
               for="modal-waktu-mulai"
               class="block text-sm font-medium text-gray-700"
-              >Start Time</label
+              >Waktu Mulai</label
             >
             <input
               type="time"
@@ -638,7 +609,7 @@
             <label
               for="modal-waktu-selesai"
               class="block text-sm font-medium text-gray-700"
-              >End Time</label
+              >Waktu Selesai</label
             >
             <input
               type="time"
@@ -652,14 +623,14 @@
           <label
             for="modal-is-available"
             class="block text-sm font-medium text-gray-700"
-            >Availability</label
+            >Ketersediaan</label
           >
           <select
             id="modal-is-available"
             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
           >
-            <option value="1">Available</option>
-            <option value="0">Unavailable</option>
+            <option value="1">Tersedia</option>
+            <option value="0">Tidak Tersedia</option>
           </select>
         </div>
         <div class="flex justify-end space-x-4">
@@ -668,20 +639,19 @@
             id="close-schedule-modal"
             class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-md transition duration-300 ease-in-out"
           >
-            Cancel
+            Batal
           </button>
           <button
             type="submit"
             class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition duration-300 ease-in-out"
           >
-            Save Schedule
+            Simpan Jadwal
           </button>
         </div>
         <p id="schedule-modal-message" class="text-red-500 text-sm mt-2"></p>
       </form>
     </div>
 
-    <!-- Message modal: Removed 'hidden' class from initial HTML -->
     <div
       id="message-modal"
       class="fixed hidden bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center"
@@ -695,7 +665,6 @@
       </button>
     </div>
 
-    <!-- Main JavaScript file for Doctor Dashboard -->
     <script src="/js/doctorDashboard.js"></script>
   </body>
 </html>

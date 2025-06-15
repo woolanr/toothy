@@ -1,21 +1,18 @@
 // backend/controllers/doctorController.js
-const db = require("../config/database"); // Your MySQL2 Promise Pool
-const User = require("../models/userModel"); // For using shared user/doctor model methods
-const moment = require("moment"); // For date/time formatting, if not already used, consider adding via npm install moment
+const db = require("../config/database");
+const User = require("../models/userModel");
+const moment = require("moment");
 
 const doctorController = {
-  // Get Dashboard Data for a Doctor
   getDashboardData: async (req, res) => {
-    // --- ADD THIS CONSOLE.LOG ---
+    console.log("--- START doctorController.getDashboardData ---");
     console.log(
-      "DoctorController: getDashboardData - req.user at start:",
+      "doctorController.getDashboardData: req.user at start of controller:",
       req.user
     );
-    // --- END ADDED LOG ---
 
-    const id_doctor = req.user.id_doctor; // id_doctor is now directly available from JWT payload
-    const today = moment().format("YYYY-MM-DD"); // Current date for today's queue and upcoming appointments
-
+    const id_doctor = req.user.id_doctor;
+    const today = moment().format("YYYY-MM-DD");
     if (!id_doctor) {
       console.error("Doctor ID is missing from authenticated user data.");
       return res
@@ -24,7 +21,6 @@ const doctorController = {
     }
 
     try {
-      // 1. Get Today's/Upcoming Appointments
       const [upcomingAppointments] = await db.execute(
         `SELECT 
                     a.id_appointment, 
@@ -44,7 +40,6 @@ const doctorController = {
         [id_doctor, today]
       );
 
-      // 2. Get Patient Queues (Appointments for today, status 'Pending' or 'Confirmed')
       const [patientQueue] = await db.execute(
         `SELECT 
                     a.id_appointment, 
@@ -62,8 +57,6 @@ const doctorController = {
         [id_doctor, today]
       );
 
-      // 3. Get Private Practice Schedule
-      // This assumes doctor_schedules uses hari_dalam_minggu (day of the week)
       const [doctorSchedule] = await db.execute(
         `SELECT 
                     id_schedule, 
@@ -73,7 +66,7 @@ const doctorController = {
                     is_available
                  FROM DOCTOR_SCHEDULES
                  WHERE id_doctor = ?
-                 ORDER BY FIELD(hari_dalam_minggu, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'), waktu_mulai ASC`,
+                 ORDER BY hari_dalam_minggu ASC, waktu_mulai ASC`,
         [id_doctor]
       );
 
@@ -90,11 +83,10 @@ const doctorController = {
     }
   },
 
-  // Get Doctor's Own Profile Details
   getDoctorProfile: async (req, res) => {
     const id_user = req.user.id_user;
     const id_doctor = req.user.id_doctor;
-    const id_profile_user = req.user.id_profile; // The profile ID linked to the user table
+    const id_profile_user = req.user.id_profile;
 
     if (!id_user || !id_doctor || !id_profile_user) {
       return res
@@ -103,7 +95,6 @@ const doctorController = {
     }
 
     try {
-      // Fetch profile data from 'PROFILE' table using id_profile
       const [profileRows] = await db.execute(
         `SELECT 
                     nama_lengkap, email, no_telepon, tanggal_lahir, jenis_kelamin, alamat, nik
@@ -119,7 +110,6 @@ const doctorController = {
           .json({ message: "Data profil tidak ditemukan." });
       }
 
-      // Fetch doctor-specific data from 'DOCTORS' table using id_doctor
       const [doctorRows] = await db.execute(
         `SELECT 
                     spesialisasi, lisensi_no, pengalaman_tahun, foto_profil_url, rating_rata2
@@ -135,7 +125,6 @@ const doctorController = {
           .json({ message: "Data dokter tidak ditemukan." });
       }
 
-      // Combine and send
       res.status(200).json({
         ...profileData,
         ...doctorData,
@@ -148,11 +137,10 @@ const doctorController = {
     }
   },
 
-  // Update Doctor's Own Profile Details
   updateDoctorProfile: async (req, res) => {
     const id_user = req.user.id_user;
     const id_doctor = req.user.id_doctor;
-    const id_profile_user = req.user.id_profile; // The profile ID linked to the user table
+    const id_profile_user = req.user.id_profile;
 
     if (!id_user || !id_doctor || !id_profile_user) {
       return res
@@ -167,14 +155,13 @@ const doctorController = {
       tanggal_lahir,
       jenis_kelamin,
       alamat,
-      nik, // from PROFILE
+      nik,
       spesialisasi,
       lisensi_no,
       pengalaman_tahun,
-      foto_profil_url, // from DOCTORS
+      foto_profil_url,
     } = req.body;
 
-    // Data for PROFILE table
     const profileDataToUpdate = {
       nama_lengkap: nama_lengkap,
       email: email,
@@ -185,7 +172,6 @@ const doctorController = {
       nik: nik,
     };
 
-    // Data for DOCTORS table
     const doctorDataToUpdate = {
       spesialisasi: spesialisasi,
       lisensi_no: lisensi_no,
@@ -194,12 +180,11 @@ const doctorController = {
     };
 
     try {
-      // Use the comprehensive update method from userModel
       const updateResult = await User.updateFullDoctorDetails(
         id_user,
         id_profile_user,
         id_doctor,
-        {}, // No direct update to USERS table via this route (username, password etc.)
+        {},
         profileDataToUpdate,
         doctorDataToUpdate
       );
@@ -217,7 +202,6 @@ const doctorController = {
     }
   },
 
-  // Get Appointment Details and Patient Medical History for Examination Module
   getAppointmentForExamination: async (req, res) => {
     const { id_appointment } = req.params;
     const id_doctor = req.user.id_doctor;
@@ -229,14 +213,13 @@ const doctorController = {
     }
 
     try {
-      // Fetch appointment details along with patient's profile data
       const [appointmentDetails] = await db.execute(
         `SELECT 
-                    a.id_appointment, a.tanggal_janji, a.waktu_janji, a.catatan_pasien, a.status_janji, a.id_service,
-                    p.id_profile, p.nama_lengkap AS patient_name, p.tanggal_lahir, p.jenis_kelamin, p.no_telepon, p.email, p.nik, p.alamat
-                 FROM APPOINTMENTS a
-                 JOIN PROFILE p ON a.id_patient = p.id_profile
-                 WHERE a.id_appointment = ? AND a.id_doctor = ?`,
+              a.id_appointment, a.tanggal_janji, a.waktu_janji, a.catatan_pasien, a.status_janji, a.id_service,
+              p.id_profile, p.nama_lengkap AS patient_name, p.tanggal_lahir, p.jenis_kelamin, p.no_telepon, p.email, p.nik, p.alamat
+           FROM APPOINTMENTS a
+           JOIN PROFILE p ON a.id_patient = p.id_profile
+           WHERE a.id_appointment = ? AND a.id_doctor = ?`,
         [id_appointment, id_doctor]
       );
 
@@ -248,29 +231,27 @@ const doctorController = {
 
       const appointment = appointmentDetails[0];
 
-      // Fetch patient's past dental medical history
-      // We need to fetch records linked to this patient's profile ID
       const [medicalHistory] = await db.execute(
         `SELECT 
-                    dm.id_record, 
-                    dm.examination_date, 
-                    dm.chief_complaint, 
-                    dm.dental_examination_findings,
-                    dm.diagnosis, 
-                    dm.treatment_plan, 
-                    dm.actions_taken, 
-                    dm.doctor_notes,
-                    doc_profile.nama_lengkap AS examining_doctor_name, -- Get examining doctor's name
-                    s.nama_layanan AS service_name -- Service name for the historical record
-                 FROM DENTAL_MEDICAL_RECORDS dm
-                 JOIN DOCTORS doc ON dm.id_doctor = doc.id_doctor
-                 JOIN PROFILE doc_profile ON doc.id_user = doc_profile.id_user -- Join to get the doctor's name from profile
-                 LEFT JOIN APPOINTMENTS a_hist ON dm.id_appointment = a_hist.id_appointment -- Join to get service info for historical records
-                 LEFT JOIN SERVICES s ON a_hist.id_service = s.id_service -- Assuming 'services' table exists
-                 WHERE dm.id_profile = ? 
-                 AND dm.id_appointment != ? -- Exclude the current appointment's record if it already exists (for re-editing)
-                 ORDER BY dm.examination_date DESC`,
-        [appointment.id_profile, id_appointment]
+              dm.id_record, 
+              dm.examination_date, 
+              dm.chief_complaint, 
+              dm.dental_examination_findings,
+              dm.diagnosis, 
+              dm.treatment_plan, 
+              dm.actions_taken, 
+              dm.doctor_notes,
+              doc_profile.nama_lengkap AS examining_doctor_name,
+              s.nama_layanan AS service_name
+           FROM DENTAL_MEDICAL_RECORDS dm
+           JOIN DOCTORS doc ON dm.id_doctor = doc.id_doctor
+           JOIN USERS u ON doc.id_user = u.id_user 
+           JOIN PROFILE doc_profile ON u.id_profile = doc_profile.id_profile
+           LEFT JOIN APPOINTMENTS a_hist ON dm.id_appointment = a_hist.id_appointment
+           LEFT JOIN SERVICES s ON a_hist.id_service = s.id_service
+           WHERE dm.id_profile = ? 
+           ORDER BY dm.examination_date DESC`,
+        [appointment.id_profile]
       );
 
       res.status(200).json({
@@ -285,11 +266,10 @@ const doctorController = {
     }
   },
 
-  // Save Examination Result and Update Appointment Status
   saveExaminationResult: async (req, res) => {
     const { id_appointment } = req.params;
     const id_doctor = req.user.id_doctor;
-    const id_profile = req.body.id_profile; // Patient's id_profile from frontend form
+    const id_profile = req.body.id_profile;
 
     const {
       chief_complaint,
@@ -313,12 +293,11 @@ const doctorController = {
       });
     }
 
-    const connection = await db.getConnection(); // Get a connection for transaction
+    const connection = await db.getConnection();
 
     try {
       await connection.beginTransaction();
 
-      // 1. Verify that the appointment exists and belongs to this doctor and patient
       const [apptCheck] = await connection.execute(
         `SELECT id_appointment FROM APPOINTMENTS 
                  WHERE id_appointment = ? AND id_doctor = ? AND id_patient = ?`,
@@ -333,7 +312,6 @@ const doctorController = {
         });
       }
 
-      // 2. Check if a medical record for this appointment already exists
       const [existingRecord] = await connection.execute(
         "SELECT id_record FROM DENTAL_MEDICAL_RECORDS WHERE id_appointment = ?",
         [id_appointment]
@@ -341,9 +319,9 @@ const doctorController = {
 
       const examinationData = {
         id_appointment,
-        id_profile, // Patient's profile ID
+        id_profile,
         id_doctor,
-        examination_date: moment().format("YYYY-MM-DD HH:mm:ss"), // Current timestamp
+        examination_date: moment().format("YYYY-MM-DD HH:mm:ss"),
         chief_complaint,
         dental_examination_findings,
         diagnosis,
@@ -353,7 +331,6 @@ const doctorController = {
       };
 
       if (existingRecord.length > 0) {
-        // Update existing record
         await connection.execute(
           `UPDATE DENTAL_MEDICAL_RECORDS
                      SET chief_complaint = ?, dental_examination_findings = ?, diagnosis = ?, treatment_plan = ?,
@@ -371,7 +348,6 @@ const doctorController = {
           ]
         );
       } else {
-        // Insert new record
         await connection.execute(
           `INSERT INTO DENTAL_MEDICAL_RECORDS (id_appointment, id_profile, id_doctor, examination_date,
                                                         chief_complaint, dental_examination_findings, diagnosis,
@@ -392,10 +368,9 @@ const doctorController = {
         );
       }
 
-      // 3. Update appointment status to 'Examined'
       await connection.execute(
         `UPDATE APPOINTMENTS
-                 SET status_janji = 'Examined'
+                 SET status_janji = 'Completed'
                  WHERE id_appointment = ?`,
         [id_appointment]
       );
@@ -412,11 +387,10 @@ const doctorController = {
         message: "Terjadi kesalahan server saat menyimpan hasil pemeriksaan.",
       });
     } finally {
-      connection.release(); // Release the connection back to the pool
+      connection.release();
     }
   },
 
-  // Manage Doctor's Schedule (Add or Update)
   manageDoctorSchedule: async (req, res) => {
     const id_doctor = req.user.id_doctor;
     const {
@@ -442,7 +416,6 @@ const doctorController = {
 
     try {
       if (id_schedule) {
-        // Update existing schedule entry
         const [result] = await db.execute(
           `UPDATE DOCTOR_SCHEDULES
                      SET hari_dalam_minggu = ?, waktu_mulai = ?, waktu_selesai = ?, is_available = ?
@@ -464,7 +437,6 @@ const doctorController = {
           });
         }
       } else {
-        // Insert new schedule entry
         const [result] = await db.execute(
           `INSERT INTO DOCTOR_SCHEDULES (id_doctor, hari_dalam_minggu, waktu_mulai, waktu_selesai, is_available)
                      VALUES (?, ?, ?, ?, ?)`,
