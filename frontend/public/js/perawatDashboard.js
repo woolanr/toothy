@@ -5,16 +5,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const dashboardContent = document.getElementById("dashboard-content");
   const appointmentsContent = document.getElementById("appointments-content");
   const queueContent = document.getElementById("queue-content");
+  const paymentsContent = document.getElementById("payments-content");
+  const profileContent = document.getElementById("profile-content");
+
   const navDashboard = document.getElementById("nav-dashboard");
   const navAppointments = document.getElementById("nav-appointments");
   const navQueue = document.getElementById("nav-queue");
+  const navPayments = document.getElementById("nav-payments");
+  const navProfile = document.getElementById("nav-profile");
+
   const summaryTotal = document.getElementById("summary-total");
   const summaryCheckedIn = document.getElementById("summary-checked-in");
   const summaryPending = document.getElementById("summary-pending");
+
   const addAppointmentBtn = document.getElementById("add-appointment-btn");
   const appointmentsTableBody = document.getElementById(
     "appointments-table-body"
   );
+
   const modalBackdrop = document.getElementById("modal-backdrop");
 
   // Appointment Modal Elements
@@ -46,6 +54,38 @@ document.addEventListener("DOMContentLoaded", () => {
   const queueAppointmentId = document.getElementById("queue-appointment-id");
   const queueNumberInput = document.getElementById("queue-number");
   const queueStatusSelect = document.getElementById("queue-status");
+
+  // Payment Management Elements
+  const paymentsTableBody = document.getElementById("payments-table-body");
+  const paymentModal = document.getElementById("payment-modal");
+  const closePaymentModalBtn = document.getElementById(
+    "close-payment-modal-btn"
+  );
+  const paymentForm = document.getElementById("payment-form");
+  const paymentAppointmentId = document.getElementById(
+    "payment-appointment-id"
+  );
+  const paymentMethodSelect = document.getElementById("payment-method");
+  const printReceiptBtn = document.getElementById("print-receipt-btn");
+  const processPaymentBtn = document.getElementById("process-payment-btn");
+  const receiptPatient = document.getElementById("receipt-patient");
+  const receiptDoctor = document.getElementById("receipt-doctor");
+  const receiptDate = document.getElementById("receipt-date");
+  const receiptService = document.getElementById("receipt-service");
+  const receiptTotal = document.getElementById("receipt-total");
+  const receiptStatus = document.getElementById("receipt-status");
+
+  // Profile Form Elements
+  const profileForm = document.getElementById("profile-form");
+  const profileNamaLengkap = document.getElementById("profile-nama-lengkap");
+  const profileEmail = document.getElementById("profile-email");
+  const profileNoTelepon = document.getElementById("profile-no-telepon");
+  const profileTanggalLahir = document.getElementById("profile-tanggal-lahir");
+  const profileJenisKelamin = document.getElementById("profile-jenis-kelamin");
+  const profileNik = document.getElementById("profile-nik");
+  const profileAlamat = document.getElementById("profile-alamat");
+  const profileMessage = document.getElementById("profile-message");
+
   const logoutBtn = document.getElementById("logout-btn");
 
   // --- Utility Functions ---
@@ -59,27 +99,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- View Management ---
   function showPage(pageId) {
-    [dashboardContent, appointmentsContent, queueContent].forEach((p) =>
-      p.classList.add("hidden")
-    );
-    [navDashboard, navAppointments, navQueue].forEach((n) =>
-      n.classList.remove("active")
+    [
+      dashboardContent,
+      appointmentsContent,
+      queueContent,
+      paymentsContent,
+      profileContent,
+    ].forEach((p) => p.classList.add("hidden"));
+    [navDashboard, navAppointments, navQueue, navPayments, navProfile].forEach(
+      (n) => n.classList.remove("active")
     );
 
     if (pageId === "dashboard") {
       dashboardContent.classList.remove("hidden");
       navDashboard.classList.add("active");
       fetchDashboardSummary();
+    } else if (pageId === "queue") {
+      queueContent.classList.remove("hidden");
+      navQueue.classList.add("active");
       fetchTodaysQueue();
     } else if (pageId === "appointments") {
       appointmentsContent.classList.remove("hidden");
       navAppointments.classList.add("active");
       fetchAllAppointments();
       fetchDoctorsForFilter();
-    } else if (pageId === "queue") {
-      queueContent.classList.remove("hidden");
-      navQueue.classList.add("active");
-      fetchTodaysQueue();
+    } else if (pageId === "payments") {
+      paymentsContent.classList.remove("hidden");
+      navPayments.classList.add("active");
+      fetchBillingList();
+    } else if (pageId === "profile") {
+      profileContent.classList.remove("hidden");
+      navProfile.classList.add("active");
+      fetchStaffProfile();
     }
   }
 
@@ -123,6 +174,35 @@ document.addEventListener("DOMContentLoaded", () => {
     queueForm.reset();
   }
 
+  function openPaymentModal(billingItem) {
+    receiptPatient.textContent = billingItem.patient_name;
+    receiptDoctor.textContent = billingItem.doctor_name;
+    receiptDate.textContent = new Date().toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    receiptService.textContent = billingItem.service_name;
+    receiptTotal.textContent = `Rp ${Number(
+      billingItem.service_cost
+    ).toLocaleString("id-ID")}`;
+    receiptStatus.textContent = billingItem.status_pembayaran || "Belum Lunas";
+    paymentAppointmentId.value = billingItem.id_appointment;
+    if (billingItem.status_pembayaran === "Lunas") {
+      processPaymentBtn.classList.add("hidden");
+      paymentMethodSelect.disabled = true;
+    } else {
+      processPaymentBtn.classList.remove("hidden");
+      paymentMethodSelect.disabled = false;
+    }
+    modalBackdrop.classList.remove("hidden");
+    paymentModal.classList.remove("hidden");
+  }
+  function closePaymentModal() {
+    modalBackdrop.classList.add("hidden");
+    paymentModal.classList.add("hidden");
+  }
+
   // --- Data Fetching ---
   async function fetchDashboardSummary() {
     try {
@@ -138,7 +218,6 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
-
   async function fetchAllAppointments() {
     appointmentsTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center">Memuat data janji temu...</td></tr>`;
     const params = new URLSearchParams();
@@ -157,7 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
-
   async function fetchDoctorsForModal(selectedDoctorId) {
     try {
       const response = await fetch(`${API_BASE_URL}/doctors`, {
@@ -177,7 +255,6 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
-
   async function fetchDoctorsForFilter() {
     try {
       const response = await fetch(`${API_BASE_URL}/doctors`, {
@@ -196,7 +273,6 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
-
   async function fetchServicesForModal(selectedServiceId) {
     try {
       const response = await fetch(`${API_BASE_URL}/services`, {
@@ -216,7 +292,6 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
-
   async function fetchTodaysQueue() {
     todaysQueueContainer.innerHTML = `<p class="text-center text-gray-500">Memuat antrian pasien...</p>`;
     try {
@@ -230,8 +305,41 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
+  async function fetchBillingList() {
+    paymentsTableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center">Memuat daftar tagihan...</td></tr>`;
+    try {
+      const response = await fetch(`${API_BASE_URL}/billing`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!response.ok) throw new Error("Gagal memuat daftar tagihan.");
+      const billingList = await response.json();
+      renderBillingTable(billingList);
+    } catch (error) {
+      handleApiError(error);
+    }
+  }
+  async function fetchStaffProfile() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/my-profile`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!response.ok) throw new Error("Gagal memuat profil.");
+      const data = await response.json();
+      profileNamaLengkap.value = data.nama_lengkap || "";
+      profileEmail.value = data.email || "";
+      profileNoTelepon.value = data.no_telepon || "";
+      profileTanggalLahir.value = data.tanggal_lahir
+        ? data.tanggal_lahir.split("T")[0]
+        : "";
+      profileJenisKelamin.value = data.jenis_kelamin || "";
+      profileNik.value = data.nik || "";
+      profileAlamat.value = data.alamat || "";
+    } catch (error) {
+      handleApiError(error);
+    }
+  }
 
-  // Rendering
+  // --- Rendering ---
   function getStatusBadge(status) {
     const colors = {
       Pending: "bg-yellow-200 text-yellow-800",
@@ -308,19 +416,131 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     todaysQueueContainer.appendChild(queueGrid);
   }
+  function renderBillingTable(billingList) {
+    paymentsTableBody.innerHTML = "";
+    if (billingList.length === 0) {
+      paymentsTableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center">Tidak ada tagihan yang perlu diproses.</td></tr>`;
+      return;
+    }
+    billingList.forEach((item) => {
+      const row = document.createElement("tr");
+      row.className = "border-b hover:bg-gray-50";
+      const isPaid = item.status_pembayaran === "Lunas";
+      row.innerHTML = `
+              <td class="p-3">${item.patient_name}</td>
+              <td class="p-3">${item.doctor_name}</td>
+              <td class="p-3">${item.service_name}</td>
+              <td class="p-3 font-medium">Rp ${Number(
+                item.service_cost
+              ).toLocaleString("id-ID")}</td>
+              <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                isPaid
+                  ? "bg-green-200 text-green-800"
+                  : "bg-red-200 text-red-800"
+              }">${item.status_pembayaran || "Belum Lunas"}</span></td>
+              <td class="p-3">
+                  <button class="payment-btn text-blue-600 hover:text-blue-800 font-medium" data-id="${
+                    item.id_appointment
+                  }">${
+        isPaid ? "Lihat Tanda Terima" : "Proses Pembayaran"
+      }</button>
+              </td>
+          `;
+      paymentsTableBody.appendChild(row);
+      row.querySelector(".payment-btn").addEventListener("click", () => {
+        const fullBillingItem = billingList.find(
+          (b) => b.id_appointment == item.id_appointment
+        );
+        openPaymentModal(fullBillingItem);
+      });
+    });
+  }
 
-  // Event Listeners
+  function renderBillingTable(billingList) {
+    paymentsTableBody.innerHTML = "";
+    if (billingList.length === 0) {
+      paymentsTableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center">Tidak ada tagihan yang perlu diproses.</td></tr>`;
+      return;
+    }
+    billingList.forEach((item) => {
+      const row = document.createElement("tr");
+      row.className = "border-b hover:bg-gray-50";
+      const isPaid = item.status_pembayaran === "Lunas";
+      row.innerHTML = `
+              <td class="p-3">${item.patient_name}</td>
+              <td class="p-3">${item.doctor_name}</td>
+              <td class="p-3">${item.service_name}</td>
+              <td class="p-3 font-medium">Rp ${Number(
+                item.service_cost
+              ).toLocaleString("id-ID")}</td>
+              <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                isPaid
+                  ? "bg-green-200 text-green-800"
+                  : "bg-red-200 text-red-800"
+              }">${item.status_pembayaran || "Belum Lunas"}</span></td>
+              <td class="p-3">
+                  <button class="payment-btn text-blue-600 hover:text-blue-800 font-medium" data-id="${
+                    item.id_appointment
+                  }">${
+        isPaid ? "Lihat Tanda Terima" : "Proses Pembayaran"
+      }</button>
+              </td>
+          `;
+      paymentsTableBody.appendChild(row);
+      row.querySelector(".payment-btn").addEventListener("click", () => {
+        const fullBillingItem = billingList.find(
+          (b) => b.id_appointment == item.id_appointment
+        );
+        openPaymentModal(fullBillingItem);
+      });
+    });
+  }
+
+  async function fetchStaffProfile() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/my-profile`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!response.ok) throw new Error("Gagal memuat profil.");
+      const data = await response.json();
+      profileNamaLengkap.value = data.nama_lengkap || "";
+      profileEmail.value = data.email || "";
+      profileNoTelepon.value = data.no_telepon || "";
+      profileTanggalLahir.value = data.tanggal_lahir
+        ? data.tanggal_lahir.split("T")[0]
+        : "";
+      profileJenisKelamin.value = data.jenis_kelamin || "";
+      profileNik.value = data.nik || "";
+      profileAlamat.value = data.alamat || "";
+    } catch (error) {
+      handleApiError(error);
+    }
+  }
+
+  // --- Event Listeners ---
   navDashboard.addEventListener("click", (e) => {
     e.preventDefault();
     showPage("dashboard");
+  });
+  navQueue.addEventListener("click", (e) => {
+    e.preventDefault();
+    showPage("queue");
   });
   navAppointments.addEventListener("click", (e) => {
     e.preventDefault();
     showPage("appointments");
   });
-  navQueue.addEventListener("click", (e) => {
+  navPayments.addEventListener("click", (e) => {
     e.preventDefault();
-    showPage("queue");
+    showPage("payments");
+  });
+  navProfile.addEventListener("click", (e) => {
+    e.preventDefault();
+    showPage("profile");
+  });
+
+  addAppointmentBtn.addEventListener("click", () => {
+    openModal("Tambah Janji Temu Baru");
   });
   addAppointmentBtn.addEventListener("click", () => {
     openModal("Tambah Janji Temu Baru");
@@ -331,6 +551,8 @@ document.addEventListener("DOMContentLoaded", () => {
   filterDoctor.addEventListener("change", fetchAllAppointments);
   filterStatus.addEventListener("change", fetchAllAppointments);
   closeQueueModalBtn.addEventListener("click", closeQueueModal);
+  closePaymentModalBtn.addEventListener("click", closePaymentModal);
+  printReceiptBtn.addEventListener("click", () => window.print());
   logoutBtn.addEventListener("click", () => {
     localStorage.removeItem("token");
     window.location.href = "/login";
@@ -365,11 +587,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  paymentForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const payload = {
+      id_appointment: paymentAppointmentId.value,
+      jumlah_pembayaran: document
+        .getElementById("receipt-total")
+        .textContent.replace(/[^0-9]/g, ""),
+      metode_pembayaran: paymentMethodSelect.value,
+    };
+    try {
+      const response = await fetch(`${API_BASE_URL}/payment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || "Gagal memproses pembayaran.");
+      }
+      const result = await response.json();
+      alert(result.message);
+      closePaymentModal();
+      fetchBillingList();
+    } catch (error) {
+      handleApiError(error);
+    }
+  });
+
   appointmentForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const id = modalAppointmentId.value;
     let payload, url, method;
-
     if (id) {
       method = "PUT";
       url = `${API_BASE_URL}/appointment/${id}`;
@@ -394,7 +646,6 @@ document.addEventListener("DOMContentLoaded", () => {
         catatan_pasien: modalNotes.value,
       };
     }
-
     try {
       const response = await fetch(url, {
         method: method,
@@ -412,7 +663,90 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(result.message);
       closeModal();
       fetchAllAppointments();
-      fetchDashboardSummary(); // Also refresh summary in case status changed
+      fetchDashboardSummary();
+    } catch (error) {
+      handleApiError(error);
+    }
+  });
+
+  profileForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const payload = {
+      nama_lengkap: profileNamaLengkap.value,
+      email: profileEmail.value,
+      no_telepon: profileNoTelepon.value,
+      tanggal_lahir: profileTanggalLahir.value,
+      jenis_kelamin: profileJenisKelamin.value,
+      nik: profileNik.value,
+      alamat: profileAlamat.value,
+    };
+    try {
+      const response = await fetch(`${API_BASE_URL}/my-profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.message || "Gagal menyimpan profil.");
+      profileMessage.textContent = result.message;
+      profileMessage.className = "text-sm text-center text-green-600";
+      setTimeout(() => (profileMessage.textContent = ""), 3000);
+    } catch (error) {
+      profileMessage.textContent = error.message;
+      profileMessage.className = "text-sm text-center text-red-600";
+    }
+  });
+
+  appointmentForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = modalAppointmentId.value;
+    let payload, url, method;
+    if (id) {
+      method = "PUT";
+      url = `${API_BASE_URL}/appointment/${id}`;
+      payload = {
+        id_doctor: modalDoctor.value,
+        id_service: modalService.value,
+        tanggal_janji: modalDate.value,
+        waktu_janji: modalTime.value,
+        status_janji: modalStatus.value,
+        catatan_pasien: modalNotes.value,
+      };
+    } else {
+      method = "POST";
+      url = `${API_BASE_URL}/appointment`;
+      payload = {
+        patient_name: modalPatientName.value,
+        id_doctor: modalDoctor.value,
+        id_service: modalService.value,
+        tanggal_janji: modalDate.value,
+        waktu_janji: modalTime.value,
+        status_janji: modalStatus.value,
+        catatan_pasien: modalNotes.value,
+      };
+    }
+    try {
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || "Gagal menyimpan janji temu.");
+      }
+      const result = await response.json();
+      alert(result.message);
+      closeModal();
+      fetchAllAppointments();
+      fetchDashboardSummary();
     } catch (error) {
       handleApiError(error);
     }
@@ -421,7 +755,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Initial Load ---
   function initializePage() {
     if (getToken()) {
-      // Use a small timeout to ensure the DOM is fully ready before the first fetch
       setTimeout(() => {
         showPage("dashboard");
       }, 10);
@@ -429,6 +762,5 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "/login";
     }
   }
-
   initializePage();
 });

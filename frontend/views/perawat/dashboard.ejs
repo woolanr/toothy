@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dasbor Staf - Happy Toothy</title>
+    <title>Dashboard Perawat - Happy Toothy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
@@ -27,6 +27,21 @@
       .table-responsive {
         overflow-x: auto;
       }
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #receipt-to-print,
+        #receipt-to-print * {
+          visibility: visible;
+        }
+        #receipt-to-print {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+        }
+      }
     </style>
   </head>
   <body class="bg-gray-100">
@@ -46,10 +61,10 @@
                 id="nav-dashboard"
                 class="nav-link flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors duration-200 active"
               >
-                <i class="fas fa-tachometer-alt mr-3"></i> Dasbor
+                <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
               </a>
             </li>
-            <!-- NEW: Queue Page Link -->
+            <!-- Queue Page -->
             <li>
               <a
                 href="#"
@@ -68,6 +83,22 @@
                 <i class="fas fa-calendar-check mr-3"></i> Kelola Janji Temu
               </a>
             </li>
+            <li>
+              <a
+                href="#"
+                id="nav-payments"
+                class="nav-link flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors duration-200"
+                ><i class="fas fa-receipt mr-3"></i> Pembayaran</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                id="nav-profile"
+                class="nav-link flex items-center p-3 rounded-md hover:bg-gray-700 transition-colors duration-200"
+                ><i class="fas fa-user-circle mr-3"></i> Profil Saya</a
+              >
+            </li>
           </ul>
         </div>
         <button
@@ -83,7 +114,7 @@
         <!-- Dashboard Content -->
         <section id="dashboard-content" class="page-content">
           <h2 class="text-3xl font-bold text-gray-800 mb-8">
-            Ringkasan Dasbor
+            Ringkasan Dashboard
           </h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-blue-100 p-6 rounded-lg shadow">
@@ -105,7 +136,7 @@
           </div>
         </section>
 
-        <!-- NEW: Queue Management Content -->
+        <!-- Queue Management Content -->
         <section id="queue-content" class="page-content hidden">
           <h2 class="text-3xl font-bold text-gray-800 mb-8">
             Antrian Pasien Hari Ini
@@ -173,6 +204,144 @@
             </div>
           </div>
         </section>
+
+        <!-- Payment Management Content -->
+        <section id="payments-content" class="page-content hidden">
+          <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            Manajemen Pembayaran
+          </h2>
+          <div class="bg-white p-6 rounded-lg shadow">
+            <div class="table-responsive">
+              <table class="w-full text-left">
+                <thead class="bg-gray-200">
+                  <tr>
+                    <th class="p-3">Pasien</th>
+                    <th class="p-3">Dokter</th>
+                    <th class="p-3">Layanan</th>
+                    <th class="p-3">Total Biaya</th>
+                    <th class="p-3">Status Pembayaran</th>
+                    <th class="p-3">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="payments-table-body">
+                  <tr>
+                    <td colspan="6" class="p-4 text-center">
+                      Memuat data pembayaran...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Profile Content Section -->
+        <section id="profile-content" class="page-content hidden">
+          <h2 class="text-3xl font-bold text-gray-800 mb-8">Profil Saya</h2>
+          <form
+            id="profile-form"
+            class="space-y-6 bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto"
+          >
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  for="profile-nama-lengkap"
+                  class="block text-sm font-medium text-gray-700"
+                  >Nama Lengkap</label
+                >
+                <input
+                  type="text"
+                  id="profile-nama-lengkap"
+                  required
+                  class="mt-1 w-full p-2 border rounded-md"
+                />
+              </div>
+              <div>
+                <label
+                  for="profile-email"
+                  class="block text-sm font-medium text-gray-700"
+                  >Email</label
+                >
+                <input
+                  type="email"
+                  id="profile-email"
+                  required
+                  class="mt-1 w-full p-2 border rounded-md"
+                />
+              </div>
+              <div>
+                <label
+                  for="profile-no-telepon"
+                  class="block text-sm font-medium text-gray-700"
+                  >Nomor Telepon</label
+                >
+                <input
+                  type="text"
+                  id="profile-no-telepon"
+                  class="mt-1 w-full p-2 border rounded-md"
+                />
+              </div>
+              <div>
+                <label
+                  for="profile-tanggal-lahir"
+                  class="block text-sm font-medium text-gray-700"
+                  >Tanggal Lahir</label
+                >
+                <input
+                  type="date"
+                  id="profile-tanggal-lahir"
+                  class="mt-1 w-full p-2 border rounded-md"
+                />
+              </div>
+              <div>
+                <label
+                  for="profile-jenis-kelamin"
+                  class="block text-sm font-medium text-gray-700"
+                  >Jenis Kelamin</label
+                >
+                <select
+                  id="profile-jenis-kelamin"
+                  class="mt-1 w-full p-2 border rounded-md"
+                >
+                  <option value="">Pilih Jenis Kelamin</option>
+                  <option value="Laki-laki">Laki-laki</option>
+                  <option value="Perempuan">Perempuan</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  for="profile-nik"
+                  class="block text-sm font-medium text-gray-700"
+                  >NIK</label
+                >
+                <input
+                  type="text"
+                  id="profile-nik"
+                  class="mt-1 w-full p-2 border rounded-md"
+                />
+              </div>
+            </div>
+            <div>
+              <label
+                for="profile-alamat"
+                class="block text-sm font-medium text-gray-700"
+                >Alamat</label
+              >
+              <textarea
+                id="profile-alamat"
+                rows="3"
+                class="mt-1 w-full p-2 border rounded-md"
+              ></textarea>
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-md shadow-sm transition duration-300 ease-in-out"
+            >
+              Simpan Perubahan Profil
+            </button>
+            <p id="profile-message" class="text-sm text-center"></p>
+          </form>
+        </section>
       </main>
     </div>
 
@@ -185,7 +354,6 @@
       id="appointment-modal"
       class="fixed hidden bg-white p-6 rounded-lg shadow-xl max-w-lg w-full z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
     >
-      <!-- Appointment Modal Content (No changes here) -->
       <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-4">
         Detail Janji Temu
       </h3>
@@ -243,11 +411,11 @@
             required
             class="mt-1 w-full p-2 border rounded-md"
           >
-            <option value="Pending">Pending</option>
-            <option value="Confirmed">Confirmed</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-            <option value="Rescheduled">Rescheduled</option>
+            <option value="Pending">Menunggu</option>
+            <option value="Confirmed">Dikonfirmasi</option>
+            <option value="Completed">Selesai</option>
+            <option value="Cancelled">Dibatalkan</option>
+            <option value="Rescheduled">Dijadwalkan Ulang</option>
           </select>
         </div>
         <div>
@@ -278,7 +446,7 @@
       id="queue-modal"
       class="fixed hidden bg-white p-6 rounded-lg shadow-xl max-w-sm w-full z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
     >
-      <!-- Queue Modal Content (No changes here) -->
+      <!-- Queue Modal Content -->
       <h3 class="text-xl font-bold text-gray-800 mb-4">
         Kelola Antrian Pasien
       </h3>
@@ -314,6 +482,69 @@
             class="px-4 py-2 bg-green-600 text-white rounded-md"
           >
             Simpan Status
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Payment & Receipt Modal -->
+    <div
+      id="payment-modal"
+      class="fixed hidden bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+    >
+      <div id="receipt-to-print">
+        <h3 class="text-xl font-bold text-gray-800 mb-2">
+          Tanda Terima Pembayaran
+        </h3>
+        <p class="text-sm text-gray-500 mb-4">Happy Toothy Dental Clinic</p>
+        <div class="border-t border-b py-2 my-2">
+          <p><strong>Pasien:</strong> <span id="receipt-patient"></span></p>
+          <p><strong>Dokter:</strong> <span id="receipt-doctor"></span></p>
+          <p><strong>Tanggal:</strong> <span id="receipt-date"></span></p>
+        </div>
+        <div class="mb-4">
+          <p><strong>Layanan:</strong> <span id="receipt-service"></span></p>
+          <p class="text-lg font-bold">
+            Total Biaya: <span id="receipt-total"></span>
+          </p>
+        </div>
+        <p class="text-center font-bold">
+          Status: <span id="receipt-status" class="text-green-600"></span>
+        </p>
+      </div>
+
+      <form id="payment-form" class="mt-6 space-y-4">
+        <input type="hidden" id="payment-appointment-id" />
+        <div>
+          <label class="block text-sm font-medium">Metode Pembayaran</label>
+          <select id="payment-method" class="mt-1 w-full p-2 border rounded-md">
+            <option value="Tunai">Tunai</option>
+            <option value="Kartu Debit">Kartu Debit</option>
+            <option value="Kartu Kredit">Kartu Kredit</option>
+            <option value="Transfer Bank">Transfer Bank</option>
+          </select>
+        </div>
+        <div class="flex justify-end space-x-4">
+          <button
+            type="button"
+            id="close-payment-modal-btn"
+            class="px-4 py-2 bg-gray-300 rounded-md"
+          >
+            Tutup
+          </button>
+          <button
+            type="button"
+            id="print-receipt-btn"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md"
+          >
+            Cetak
+          </button>
+          <button
+            type="submit"
+            id="process-payment-btn"
+            class="px-4 py-2 bg-green-600 text-white rounded-md"
+          >
+            Proses Pembayaran
           </button>
         </div>
       </form>

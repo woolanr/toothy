@@ -1,5 +1,6 @@
 const db = require("../config/database");
 const moment = require("moment");
+const User = require("../models/userModel"); // THIS LINE WAS MISSING
 
 const perawatController = {
   getSummary: async (req, res) => {
@@ -28,10 +29,9 @@ const perawatController = {
     }
   },
 
-  // UPDATED: Now handles filtering
   getAllAppointments: async (req, res) => {
     try {
-      let query = `
+      const query = `
         SELECT 
           a.id_appointment, a.id_doctor, a.id_patient, a.id_service,
           p.nama_lengkap AS patient_name,
@@ -43,31 +43,9 @@ const perawatController = {
         JOIN DOCTORS doc ON a.id_doctor = doc.id_doctor
         JOIN USERS u_doctor ON doc.id_user = u_doctor.id_user
         JOIN PROFILE d_profile ON u_doctor.id_profile = d_profile.id_profile
+        ORDER BY a.tanggal_janji DESC, a.waktu_janji DESC
       `;
-
-      const conditions = [];
-      const values = [];
-
-      if (req.query.date) {
-        conditions.push("a.tanggal_janji = ?");
-        values.push(req.query.date);
-      }
-      if (req.query.doctor) {
-        conditions.push("a.id_doctor = ?");
-        values.push(req.query.doctor);
-      }
-      if (req.query.status) {
-        conditions.push("a.status_janji = ?");
-        values.push(req.query.status);
-      }
-
-      if (conditions.length > 0) {
-        query += " WHERE " + conditions.join(" AND ");
-      }
-
-      query += " ORDER BY a.tanggal_janji DESC, a.waktu_janji DESC";
-
-      const [appointments] = await db.execute(query, values);
+      const [appointments] = await db.execute(query);
       res.status(200).json(appointments);
     } catch (error) {
       console.error("Error fetching all appointments:", error);
@@ -149,7 +127,6 @@ const perawatController = {
     }
   },
 
-  // --- UPDATED AND FIXED: Create a new appointment ---
   createAppointment: async (req, res) => {
     const {
       patient_name,
@@ -169,50 +146,38 @@ const perawatController = {
       !waktu_janji ||
       !status_janji
     ) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Nama pasien, dokter, layanan, tanggal, waktu, dan status wajib diisi.",
-        });
+      return res.status(400).json({
+        message:
+          "Nama pasien, dokter, layanan, tanggal, waktu, dan status wajib diisi.",
+      });
     }
 
     const connection = await db.getConnection();
     try {
       await connection.beginTransaction();
-
       let patientUserId;
-
       const [users] = await connection.execute(
         "SELECT u.id_user FROM USERS u JOIN PROFILE p ON u.id_profile = p.id_profile WHERE p.nama_lengkap = ?",
         [patient_name]
       );
-
       if (users.length > 0) {
         patientUserId = users[0].id_user;
       } else {
-        // This is the logic for a brand new patient
+        const [newProfile] = await connection.execute(
+          "INSERT INTO PROFILE (nama_lengkap) VALUES (?)",
+          [patient_name]
+        );
+        const newProfileId = newProfile.insertId;
         const tempEmail = `${patient_name
           .replace(/\s+/g, "")
           .toLowerCase()}${Date.now()}@temp.com`;
         const tempUsername = patient_name.replace(/\s+/g, "").toLowerCase();
-
-        // STEP 1: Create a new PROFILE record, now including the unique temporary email
-        const [newProfile] = await connection.execute(
-          "INSERT INTO PROFILE (nama_lengkap, email) VALUES (?, ?)",
-          [patient_name, tempEmail]
-        );
-        const newProfileId = newProfile.insertId;
-
-        // STEP 2: Create a new USER and link it to the new profile
         const [newUser] = await connection.execute(
           "INSERT INTO USERS (username, email, password, id_level_user, id_status_valid, id_profile) VALUES (?, ?, ?, ?, ?, ?)",
-          [tempUsername, tempEmail, "default_password", 4, 1, newProfileId] // Assuming patient level is 4
+          [tempUsername, tempEmail, "default_password", 4, 1, newProfileId]
         );
         patientUserId = newUser.insertId;
       }
-
-      // STEP 3: Create the appointment using the correct patient USER ID
       const appointmentQuery = `
             INSERT INTO APPOINTMENTS (id_patient, id_doctor, id_service, tanggal_janji, waktu_janji, status_janji, catatan_pasien)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -226,7 +191,6 @@ const perawatController = {
         status_janji,
         catatan_pasien,
       ]);
-
       await connection.commit();
       res.status(201).json({ message: "Janji temu baru berhasil dibuat!" });
     } catch (error) {
@@ -266,12 +230,9 @@ const perawatController = {
   },
 
   updateQueueStatus: async (req, res) => {
-    const { id } = req.params; // This is id_appointment
+    const { id } = req.params;
     const { nomor_antrian, status_antrian } = req.body;
-
-    // Use null for nomor_antrian if it's empty or not a number
     const queueNumber = nomor_antrian ? parseInt(nomor_antrian) : null;
-
     try {
       await db.execute(
         "UPDATE APPOINTMENTS SET nomor_antrian = ?, status_antrian = ? WHERE id_appointment = ?",
@@ -281,6 +242,101 @@ const perawatController = {
     } catch (error) {
       console.error("Error updating queue status:", error);
       res.status(500).json({ message: "Gagal memperbarui status antrian." });
+    }
+  },
+
+  getBillingList: async (req, res) => {
+    try {
+      const query = `
+        SELECT 
+          a.id_appointment,
+          p.nama_lengkap AS patient_name,
+          d_profile.nama_lengkap AS doctor_name,
+          s.nama_layanan AS service_name,
+          s.harga AS service_cost,
+          pay.status_pembayaran
+        FROM APPOINTMENTS a
+        JOIN USERS u_patient ON a.id_patient = u_patient.id_user
+        JOIN PROFILE p ON u_patient.id_profile = p.id_profile
+        JOIN DOCTORS doc ON a.id_doctor = doc.id_doctor
+        JOIN USERS u_doctor ON doc.id_user = u_doctor.id_user
+        JOIN PROFILE d_profile ON u_doctor.id_profile = d_profile.id_profile
+        JOIN SERVICES s ON a.id_service = s.id_service
+        LEFT JOIN PAYMENTS pay ON a.id_appointment = pay.id_appointment
+        WHERE a.status_janji = 'Completed' OR pay.status_pembayaran = 'Belum Lunas'
+        GROUP BY a.id_appointment
+        ORDER BY a.tanggal_janji DESC, a.waktu_janji DESC
+      `;
+      const [billingList] = await db.execute(query);
+      res.status(200).json(billingList);
+    } catch (error) {
+      console.error("Error fetching billing list:", error);
+      res.status(500).json({ message: "Gagal mengambil daftar tagihan." });
+    }
+  },
+
+  processPayment: async (req, res) => {
+    const { id_appointment, jumlah_pembayaran, metode_pembayaran } = req.body;
+    if (!id_appointment || !jumlah_pembayaran || !metode_pembayaran) {
+      return res
+        .status(400)
+        .json({ message: "Data pembayaran tidak lengkap." });
+    }
+    try {
+      await db.execute(
+        "INSERT INTO PAYMENTS (id_appointment, jumlah_pembayaran, metode_pembayaran, status_pembayaran) VALUES (?, ?, ?, ?)",
+        [id_appointment, jumlah_pembayaran, metode_pembayaran, "Lunas"]
+      );
+      res.status(201).json({ message: "Pembayaran berhasil diproses!" });
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      res.status(500).json({ message: "Gagal memproses pembayaran." });
+    }
+  },
+
+  getStaffProfile: async (req, res) => {
+    try {
+      const [profile] = await db.execute(
+        `SELECT p.nama_lengkap, p.email, p.no_telepon, p.tanggal_lahir, p.jenis_kelamin, p.alamat, p.nik 
+             FROM PROFILE p WHERE id_profile = ?`,
+        [req.user.id_profile]
+      );
+      if (profile.length === 0) {
+        return res.status(404).json({ message: "Profil tidak ditemukan." });
+      }
+      res.status(200).json(profile[0]);
+    } catch (error) {
+      console.error("Error fetching staff profile:", error);
+      res.status(500).json({ message: "Gagal mengambil profil staf." });
+    }
+  },
+
+  updateStaffProfile: async (req, res) => {
+    const id_profile = req.user.id_profile;
+    const {
+      nama_lengkap,
+      email,
+      no_telepon,
+      tanggal_lahir,
+      jenis_kelamin,
+      alamat,
+      nik,
+    } = req.body;
+
+    try {
+      await User.updateProfile(id_profile, {
+        nama_lengkap,
+        email,
+        no_telepon,
+        tanggal_lahir,
+        jenis_kelamin,
+        alamat,
+        nik,
+      });
+      res.status(200).json({ message: "Profil berhasil diperbarui!" });
+    } catch (error) {
+      console.error("Error updating staff profile:", error);
+      res.status(500).json({ message: "Gagal memperbarui profil." });
     }
   },
 };

@@ -15,7 +15,11 @@ router.get("/doctors", perawatController.getAllDoctors);
 router.get("/services", perawatController.getAllServices);
 router.get("/queue", perawatController.getTodaysQueue);
 router.put("/queue/:id", perawatController.updateQueueStatus);
+router.get("/billing", perawatController.getBillingList);
+router.post("/payment", perawatController.processPayment);
 router.put("/appointment/:id", perawatController.updateAppointment);
 router.post("/appointment", perawatController.createAppointment);
+router.get("/my-profile", perawatController.getStaffProfile);
+router.put("/my-profile", perawatController.updateStaffProfile);
 
 module.exports = router;
