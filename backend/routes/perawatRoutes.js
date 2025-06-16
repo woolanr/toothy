@@ -11,8 +11,10 @@ router.use(authorizeRoles(PERAWAT_ROLE_ID));
 
 router.get("/summary", perawatController.getSummary);
 router.get("/appointments", perawatController.getAllAppointments);
-router.get("/services", perawatController.getAllServices);
 router.get("/doctors", perawatController.getAllDoctors);
+router.get("/services", perawatController.getAllServices);
+router.get("/queue", perawatController.getTodaysQueue);
+router.put("/queue/:id", perawatController.updateQueueStatus);
 router.put("/appointment/:id", perawatController.updateAppointment);
 router.post("/appointment", perawatController.createAppointment);
 

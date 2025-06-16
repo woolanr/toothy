@@ -1,11 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
   const API_BASE_URL = "http://localhost:3000/perawat";
 
-  // DOM Elements
+  // --- DOM Elements ---
   const dashboardContent = document.getElementById("dashboard-content");
   const appointmentsContent = document.getElementById("appointments-content");
+  const queueContent = document.getElementById("queue-content");
   const navDashboard = document.getElementById("nav-dashboard");
   const navAppointments = document.getElementById("nav-appointments");
+  const navQueue = document.getElementById("nav-queue");
   const summaryTotal = document.getElementById("summary-total");
   const summaryCheckedIn = document.getElementById("summary-checked-in");
   const summaryPending = document.getElementById("summary-pending");
@@ -14,6 +16,8 @@ document.addEventListener("DOMContentLoaded", () => {
     "appointments-table-body"
   );
   const modalBackdrop = document.getElementById("modal-backdrop");
+
+  // Appointment Modal Elements
   const appointmentModal = document.getElementById("appointment-modal");
   const modalTitle = document.getElementById("modal-title");
   const closeModalBtn = document.getElementById("close-modal-btn");
@@ -27,22 +31,38 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalStatus = document.getElementById("modal-status");
   const modalNotes = document.getElementById("modal-notes");
 
-  // Utility Functions
+  // Filter Elements
+  const filterDate = document.getElementById("filter-date");
+  const filterDoctor = document.getElementById("filter-doctor");
+  const filterStatus = document.getElementById("filter-status");
+
+  // Queue Management Elements
+  const todaysQueueContainer = document.getElementById(
+    "todays-queue-container"
+  );
+  const queueModal = document.getElementById("queue-modal");
+  const closeQueueModalBtn = document.getElementById("close-queue-modal-btn");
+  const queueForm = document.getElementById("queue-form");
+  const queueAppointmentId = document.getElementById("queue-appointment-id");
+  const queueNumberInput = document.getElementById("queue-number");
+  const queueStatusSelect = document.getElementById("queue-status");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  // --- Utility Functions ---
   function getToken() {
     return localStorage.getItem("token");
   }
-
   function handleApiError(error) {
     console.error("API Error:", error);
     alert("Terjadi kesalahan: " + error.message);
   }
 
-  // View Management
+  // --- View Management ---
   function showPage(pageId) {
-    [dashboardContent, appointmentsContent].forEach((p) =>
+    [dashboardContent, appointmentsContent, queueContent].forEach((p) =>
       p.classList.add("hidden")
     );
-    [navDashboard, navAppointments].forEach((n) =>
+    [navDashboard, navAppointments, navQueue].forEach((n) =>
       n.classList.remove("active")
     );
 
@@ -50,26 +70,29 @@ document.addEventListener("DOMContentLoaded", () => {
       dashboardContent.classList.remove("hidden");
       navDashboard.classList.add("active");
       fetchDashboardSummary();
+      fetchTodaysQueue();
     } else if (pageId === "appointments") {
       appointmentsContent.classList.remove("hidden");
       navAppointments.classList.add("active");
       fetchAllAppointments();
+      fetchDoctorsForFilter();
+    } else if (pageId === "queue") {
+      queueContent.classList.remove("hidden");
+      navQueue.classList.add("active");
+      fetchTodaysQueue();
     }
   }
 
-  // Modal Management
+  // --- Modal Management ---
   async function openModal(title, appointment = {}) {
     modalTitle.textContent = title;
-
     await Promise.all([
       fetchDoctorsForModal(appointment.id_doctor),
       fetchServicesForModal(appointment.id_service),
     ]);
-
     modalAppointmentId.value = appointment.id_appointment || "";
     modalPatientName.value = appointment.patient_name || "";
     modalPatientName.readOnly = !!appointment.id_appointment;
-
     modalDate.value = appointment.tanggal_janji
       ? appointment.tanggal_janji.split("T")[0]
       : new Date().toISOString().split("T")[0];
@@ -78,18 +101,29 @@ document.addEventListener("DOMContentLoaded", () => {
       : "09:00";
     modalStatus.value = appointment.status_janji || "Pending";
     modalNotes.value = appointment.catatan_pasien || "";
-
     modalBackdrop.classList.remove("hidden");
     appointmentModal.classList.remove("hidden");
   }
-
   function closeModal() {
     modalBackdrop.classList.add("hidden");
     appointmentModal.classList.add("hidden");
     appointmentForm.reset();
   }
 
-  // Data Fetching
+  function openQueueModal(appointment) {
+    queueAppointmentId.value = appointment.id_appointment;
+    queueNumberInput.value = appointment.nomor_antrian || "";
+    queueStatusSelect.value = appointment.status_antrian || "Menunggu";
+    modalBackdrop.classList.remove("hidden");
+    queueModal.classList.remove("hidden");
+  }
+  function closeQueueModal() {
+    modalBackdrop.classList.add("hidden");
+    queueModal.classList.add("hidden");
+    queueForm.reset();
+  }
+
+  // --- Data Fetching ---
   async function fetchDashboardSummary() {
     try {
       const response = await fetch(`${API_BASE_URL}/summary`, {
@@ -107,10 +141,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function fetchAllAppointments() {
     appointmentsTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center">Memuat data janji temu...</td></tr>`;
+    const params = new URLSearchParams();
+    if (filterDate.value) params.append("date", filterDate.value);
+    if (filterDoctor.value) params.append("doctor", filterDoctor.value);
+    if (filterStatus.value) params.append("status", filterStatus.value);
     try {
-      const response = await fetch(`${API_BASE_URL}/appointments`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/appointments?${params.toString()}`,
+        { headers: { Authorization: `Bearer ${getToken()}` } }
+      );
       if (!response.ok) throw new Error("Gagal memuat daftar janji temu.");
       const appointments = await response.json();
       renderAppointmentsTable(appointments);
@@ -126,16 +165,32 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (!response.ok) throw new Error("Gagal memuat daftar dokter.");
       const doctors = await response.json();
-
       modalDoctor.innerHTML = '<option value="">Pilih Dokter</option>';
       doctors.forEach((doctor) => {
         const option = document.createElement("option");
         option.value = doctor.id_doctor;
         option.textContent = doctor.nama_lengkap;
-        if (doctor.id_doctor == selectedDoctorId) {
-          option.selected = true;
-        }
+        if (doctor.id_doctor == selectedDoctorId) option.selected = true;
         modalDoctor.appendChild(option);
+      });
+    } catch (error) {
+      handleApiError(error);
+    }
+  }
+
+  async function fetchDoctorsForFilter() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/doctors`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!response.ok) throw new Error("Gagal memuat daftar dokter.");
+      const doctors = await response.json();
+      filterDoctor.innerHTML = '<option value="">Semua Dokter</option>';
+      doctors.forEach((doctor) => {
+        const option = document.createElement("option");
+        option.value = doctor.id_doctor;
+        option.textContent = doctor.nama_lengkap;
+        filterDoctor.appendChild(option);
       });
     } catch (error) {
       handleApiError(error);
@@ -149,17 +204,28 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (!response.ok) throw new Error("Gagal memuat daftar layanan.");
       const services = await response.json();
-
       modalService.innerHTML = '<option value="">Pilih Layanan</option>';
       services.forEach((service) => {
         const option = document.createElement("option");
         option.value = service.id_service;
         option.textContent = service.nama_layanan;
-        if (service.id_service == selectedServiceId) {
-          option.selected = true;
-        }
+        if (service.id_service == selectedServiceId) option.selected = true;
         modalService.appendChild(option);
       });
+    } catch (error) {
+      handleApiError(error);
+    }
+  }
+
+  async function fetchTodaysQueue() {
+    todaysQueueContainer.innerHTML = `<p class="text-center text-gray-500">Memuat antrian pasien...</p>`;
+    try {
+      const response = await fetch(`${API_BASE_URL}/queue`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!response.ok) throw new Error("Gagal memuat antrian.");
+      const queue = await response.json();
+      renderTodaysQueue(queue);
     } catch (error) {
       handleApiError(error);
     }
@@ -181,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderAppointmentsTable(appointments) {
     appointmentsTableBody.innerHTML = "";
     if (appointments.length === 0) {
-      appointmentsTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center">Tidak ada data janji temu.</td></tr>`;
+      appointmentsTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center">Tidak ada data janji temu yang cocok.</td></tr>`;
       return;
     }
     appointments.forEach((appt) => {
@@ -210,6 +276,39 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function renderTodaysQueue(queue) {
+    todaysQueueContainer.innerHTML = "";
+    if (queue.length === 0) {
+      todaysQueueContainer.innerHTML = `<p class="text-center text-gray-500">Tidak ada pasien dalam antrian hari ini.</p>`;
+      return;
+    }
+    const queueGrid = document.createElement("div");
+    queueGrid.className =
+      "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4";
+    queue.forEach((patient) => {
+      const card = document.createElement("div");
+      card.className =
+        "p-4 border rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow";
+      card.innerHTML = `
+              <div class="flex justify-between items-center mb-2">
+                  <p class="font-bold text-lg">${patient.patient_name}</p>
+                  <p class="font-bold text-xl text-blue-600">#${
+                    patient.nomor_antrian || "N/A"
+                  }</p>
+              </div>
+              <p class="text-sm text-gray-600">Dokter: ${
+                patient.doctor_name
+              }</p>
+              <p class="text-sm font-medium mt-2">Status: <span class="text-green-700">${
+                patient.status_antrian || "Menunggu"
+              }</span></p>
+          `;
+      card.addEventListener("click", () => openQueueModal(patient));
+      queueGrid.appendChild(card);
+    });
+    todaysQueueContainer.appendChild(queueGrid);
+  }
+
   // Event Listeners
   navDashboard.addEventListener("click", (e) => {
     e.preventDefault();
@@ -219,22 +318,59 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     showPage("appointments");
   });
+  navQueue.addEventListener("click", (e) => {
+    e.preventDefault();
+    showPage("queue");
+  });
   addAppointmentBtn.addEventListener("click", () => {
     openModal("Tambah Janji Temu Baru");
   });
   closeModalBtn.addEventListener("click", closeModal);
   modalBackdrop.addEventListener("click", closeModal);
+  filterDate.addEventListener("change", fetchAllAppointments);
+  filterDoctor.addEventListener("change", fetchAllAppointments);
+  filterStatus.addEventListener("change", fetchAllAppointments);
+  closeQueueModalBtn.addEventListener("click", closeQueueModal);
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  });
+
+  queueForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = queueAppointmentId.value;
+    const payload = {
+      nomor_antrian: queueNumberInput.value,
+      status_antrian: queueStatusSelect.value,
+    };
+    try {
+      const response = await fetch(`${API_BASE_URL}/queue/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || "Gagal memperbarui status antrian.");
+      }
+      const result = await response.json();
+      alert(result.message);
+      closeQueueModal();
+      fetchTodaysQueue();
+    } catch (error) {
+      handleApiError(error);
+    }
+  });
 
   appointmentForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const id = modalAppointmentId.value;
-
-    let payload;
-    let url;
-    let method;
+    let payload, url, method;
 
     if (id) {
-      // UPDATE
       method = "PUT";
       url = `${API_BASE_URL}/appointment/${id}`;
       payload = {
@@ -246,7 +382,6 @@ document.addEventListener("DOMContentLoaded", () => {
         catatan_pasien: modalNotes.value,
       };
     } else {
-      // CREATE
       method = "POST";
       url = `${API_BASE_URL}/appointment`;
       payload = {
@@ -269,21 +404,31 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         body: JSON.stringify(payload),
       });
-
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData.message || "Gagal menyimpan janji temu.");
       }
-
       const result = await response.json();
       alert(result.message);
       closeModal();
       fetchAllAppointments();
+      fetchDashboardSummary(); // Also refresh summary in case status changed
     } catch (error) {
       handleApiError(error);
     }
   });
 
-  // Initial Load
-  showPage("dashboard");
+  // --- Initial Load ---
+  function initializePage() {
+    if (getToken()) {
+      // Use a small timeout to ensure the DOM is fully ready before the first fetch
+      setTimeout(() => {
+        showPage("dashboard");
+      }, 10);
+    } else {
+      window.location.href = "/login";
+    }
+  }
+
+  initializePage();
 });

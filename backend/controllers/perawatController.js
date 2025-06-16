@@ -1,4 +1,3 @@
-// backend/controllers/perawatController.js
 const db = require("../config/database");
 const moment = require("moment");
 
@@ -29,9 +28,10 @@ const perawatController = {
     }
   },
 
+  // UPDATED: Now handles filtering
   getAllAppointments: async (req, res) => {
     try {
-      const query = `
+      let query = `
         SELECT 
           a.id_appointment, a.id_doctor, a.id_patient, a.id_service,
           p.nama_lengkap AS patient_name,
@@ -43,9 +43,31 @@ const perawatController = {
         JOIN DOCTORS doc ON a.id_doctor = doc.id_doctor
         JOIN USERS u_doctor ON doc.id_user = u_doctor.id_user
         JOIN PROFILE d_profile ON u_doctor.id_profile = d_profile.id_profile
-        ORDER BY a.tanggal_janji DESC, a.waktu_janji DESC
       `;
-      const [appointments] = await db.execute(query);
+
+      const conditions = [];
+      const values = [];
+
+      if (req.query.date) {
+        conditions.push("a.tanggal_janji = ?");
+        values.push(req.query.date);
+      }
+      if (req.query.doctor) {
+        conditions.push("a.id_doctor = ?");
+        values.push(req.query.doctor);
+      }
+      if (req.query.status) {
+        conditions.push("a.status_janji = ?");
+        values.push(req.query.status);
+      }
+
+      if (conditions.length > 0) {
+        query += " WHERE " + conditions.join(" AND ");
+      }
+
+      query += " ORDER BY a.tanggal_janji DESC, a.waktu_janji DESC";
+
+      const [appointments] = await db.execute(query, values);
       res.status(200).json(appointments);
     } catch (error) {
       console.error("Error fetching all appointments:", error);
@@ -127,6 +149,7 @@ const perawatController = {
     }
   },
 
+  // --- UPDATED AND FIXED: Create a new appointment ---
   createAppointment: async (req, res) => {
     const {
       patient_name,
@@ -146,10 +169,12 @@ const perawatController = {
       !waktu_janji ||
       !status_janji
     ) {
-      return res.status(400).json({
-        message:
-          "Nama pasien, dokter, layanan, tanggal, waktu, dan status wajib diisi.",
-      });
+      return res
+        .status(400)
+        .json({
+          message:
+            "Nama pasien, dokter, layanan, tanggal, waktu, dan status wajib diisi.",
+        });
     }
 
     const connection = await db.getConnection();
@@ -166,24 +191,28 @@ const perawatController = {
       if (users.length > 0) {
         patientUserId = users[0].id_user;
       } else {
-        const [newProfile] = await connection.execute(
-          "INSERT INTO PROFILE (nama_lengkap) VALUES (?)",
-          [patient_name]
-        );
-        const newProfileId = newProfile.insertId;
-
+        // This is the logic for a brand new patient
         const tempEmail = `${patient_name
           .replace(/\s+/g, "")
           .toLowerCase()}${Date.now()}@temp.com`;
         const tempUsername = patient_name.replace(/\s+/g, "").toLowerCase();
 
+        // STEP 1: Create a new PROFILE record, now including the unique temporary email
+        const [newProfile] = await connection.execute(
+          "INSERT INTO PROFILE (nama_lengkap, email) VALUES (?, ?)",
+          [patient_name, tempEmail]
+        );
+        const newProfileId = newProfile.insertId;
+
+        // STEP 2: Create a new USER and link it to the new profile
         const [newUser] = await connection.execute(
           "INSERT INTO USERS (username, email, password, id_level_user, id_status_valid, id_profile) VALUES (?, ?, ?, ?, ?, ?)",
-          [tempUsername, tempEmail, "default_password", 4, 1, newProfileId]
+          [tempUsername, tempEmail, "default_password", 4, 1, newProfileId] // Assuming patient level is 4
         );
         patientUserId = newUser.insertId;
       }
 
+      // STEP 3: Create the appointment using the correct patient USER ID
       const appointmentQuery = `
             INSERT INTO APPOINTMENTS (id_patient, id_doctor, id_service, tanggal_janji, waktu_janji, status_janji, catatan_pasien)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -206,6 +235,52 @@ const perawatController = {
       res.status(500).json({ message: "Gagal membuat janji temu baru." });
     } finally {
       connection.release();
+    }
+  },
+
+  getTodaysQueue: async (req, res) => {
+    const today = moment().format("YYYY-MM-DD");
+    try {
+      const query = `
+        SELECT 
+          a.id_appointment,
+          p.nama_lengkap AS patient_name,
+          d_profile.nama_lengkap AS doctor_name,
+          a.nomor_antrian,
+          a.status_antrian
+        FROM APPOINTMENTS a
+        JOIN USERS u_patient ON a.id_patient = u_patient.id_user
+        JOIN PROFILE p ON u_patient.id_profile = p.id_profile
+        JOIN DOCTORS doc ON a.id_doctor = doc.id_doctor
+        JOIN USERS u_doctor ON doc.id_user = u_doctor.id_user
+        JOIN PROFILE d_profile ON u_doctor.id_profile = d_profile.id_profile
+        WHERE a.tanggal_janji = ? AND a.status_janji = 'Confirmed'
+        ORDER BY a.nomor_antrian ASC, a.waktu_janji ASC
+      `;
+      const [queue] = await db.execute(query, [today]);
+      res.status(200).json(queue);
+    } catch (error) {
+      console.error("Error fetching today's queue:", error);
+      res.status(500).json({ message: "Gagal mengambil antrian hari ini." });
+    }
+  },
+
+  updateQueueStatus: async (req, res) => {
+    const { id } = req.params; // This is id_appointment
+    const { nomor_antrian, status_antrian } = req.body;
+
+    // Use null for nomor_antrian if it's empty or not a number
+    const queueNumber = nomor_antrian ? parseInt(nomor_antrian) : null;
+
+    try {
+      await db.execute(
+        "UPDATE APPOINTMENTS SET nomor_antrian = ?, status_antrian = ? WHERE id_appointment = ?",
+        [queueNumber, status_antrian, id]
+      );
+      res.status(200).json({ message: "Status antrian berhasil diperbarui." });
+    } catch (error) {
+      console.error("Error updating queue status:", error);
+      res.status(500).json({ message: "Gagal memperbarui status antrian." });
     }
   },
 };
