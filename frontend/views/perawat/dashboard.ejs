@@ -473,6 +473,7 @@
         </div>
       </form>
     </div>
+
     <div
       id="queue-modal"
       class="fixed hidden bg-white p-6 rounded-lg shadow-xl max-w-sm w-full z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -483,8 +484,8 @@
       <form id="queue-form" class="space-y-4">
         <input type="hidden" id="queue-appointment-id" />
         <div>
-          <label class="block text-sm font-medium">Nomor Antrian</label
-          ><input
+          <label class="block text-sm font-medium">Nomor Antrian</label>
+          <input
             type="number"
             id="queue-number"
             class="mt-1 w-full p-2 border rounded-md"
@@ -492,13 +493,23 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium">Status Antrian</label
-          ><select id="queue-status" class="mt-1 w-full p-2 border rounded-md">
+          <label class="block text-sm font-medium">Status Antrian</label>
+          <select id="queue-status" class="mt-1 w-full p-2 border rounded-md">
             <option value="Menunggu">Menunggu</option>
             <option value="Dipanggil">Dipanggil</option>
             <option value="Di Ruangan">Di Ruangan</option>
             <option value="Selesai">Selesai</option>
           </select>
+        </div>
+        <!-- NEW: Room Allocation Input -->
+        <div>
+          <label class="block text-sm font-medium">Alokasi Ruangan</label>
+          <input
+            type="text"
+            id="queue-room"
+            placeholder="Contoh: Ruang A, Poli 2"
+            class="mt-1 w-full p-2 border rounded-md"
+          />
         </div>
         <div class="flex justify-end space-x-4">
           <button
@@ -506,8 +517,9 @@
             id="close-queue-modal-btn"
             class="px-4 py-2 bg-gray-300 rounded-md"
           >
-            Batal</button
-          ><button
+            Batal
+          </button>
+          <button
             type="submit"
             class="px-4 py-2 bg-green-600 text-white rounded-md"
           >
@@ -516,6 +528,7 @@
         </div>
       </form>
     </div>
+
     <div
       id="payment-modal"
       class="fixed hidden bg-white p-6 rounded-lg shadow-xl max-w-md w-full z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"

@@ -54,6 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const queueAppointmentId = document.getElementById("queue-appointment-id");
   const queueNumberInput = document.getElementById("queue-number");
   const queueStatusSelect = document.getElementById("queue-status");
+  const queueRoomInput = document.getElementById("queue-room");
 
   // Payment Management Elements
   const paymentsTableBody = document.getElementById("payments-table-body");
@@ -169,6 +170,8 @@ document.addEventListener("DOMContentLoaded", () => {
     queueAppointmentId.value = appointment.id_appointment;
     queueNumberInput.value = appointment.nomor_antrian || "";
     queueStatusSelect.value = appointment.status_antrian || "Menunggu";
+    queueRoomInput.value = appointment.ruang_pemeriksaan || "";
+
     modalBackdrop.classList.remove("hidden");
     queueModal.classList.remove("hidden");
   }
@@ -405,9 +408,11 @@ document.addEventListener("DOMContentLoaded", () => {
       todaysQueueContainer.innerHTML = `<p class="text-center text-gray-500">Tidak ada pasien dalam antrian hari ini.</p>`;
       return;
     }
+
     const queueGrid = document.createElement("div");
     queueGrid.className =
       "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4";
+
     queue.forEach((patient) => {
       const card = document.createElement("div");
       card.className =
@@ -424,6 +429,9 @@ document.addEventListener("DOMContentLoaded", () => {
               }</p>
               <p class="text-sm font-medium mt-2">Status: <span class="text-green-700">${
                 patient.status_antrian || "Menunggu"
+              }</span></p>
+              <p class="text-sm text-gray-500 mt-1">Ruangan: <span class="font-semibold">${
+                patient.ruang_pemeriksaan || "-"
               }</span></p>
           `;
       card.addEventListener("click", () => openQueueModal(patient));
@@ -511,10 +519,13 @@ document.addEventListener("DOMContentLoaded", () => {
   queueForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const id = queueAppointmentId.value;
+
     const payload = {
       nomor_antrian: queueNumberInput.value,
       status_antrian: queueStatusSelect.value,
+      ruang_pemeriksaan: queueRoomInput.value, // NEW
     };
+
     try {
       const response = await fetch(`${API_BASE_URL}/queue/${id}`, {
         method: "PUT",
@@ -524,14 +535,16 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         body: JSON.stringify(payload),
       });
+
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData.message || "Gagal memperbarui status antrian.");
       }
+
       const result = await response.json();
       alert(result.message);
       closeQueueModal();
-      fetchTodaysQueue();
+      fetchTodaysQueue(); // Refresh the queue view
     } catch (error) {
       handleApiError(error);
     }

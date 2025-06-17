@@ -231,11 +231,9 @@ const perawatController = {
     try {
       const query = `
         SELECT 
-          a.id_appointment,
-          p.nama_lengkap AS patient_name,
+          a.id_appointment, p.nama_lengkap AS patient_name,
           d_profile.nama_lengkap AS doctor_name,
-          a.nomor_antrian,
-          a.status_antrian
+          a.nomor_antrian, a.status_antrian, a.ruang_pemeriksaan
         FROM APPOINTMENTS a
         JOIN USERS u_patient ON a.id_patient = u_patient.id_user
         JOIN PROFILE p ON u_patient.id_profile = p.id_profile
@@ -255,12 +253,14 @@ const perawatController = {
 
   updateQueueStatus: async (req, res) => {
     const { id } = req.params;
-    const { nomor_antrian, status_antrian } = req.body;
+    const { nomor_antrian, status_antrian, ruang_pemeriksaan } = req.body;
     const queueNumber = nomor_antrian ? parseInt(nomor_antrian) : null;
+    const room = ruang_pemeriksaan || null;
+
     try {
       await db.execute(
-        "UPDATE APPOINTMENTS SET nomor_antrian = ?, status_antrian = ? WHERE id_appointment = ?",
-        [queueNumber, status_antrian, id]
+        "UPDATE APPOINTMENTS SET nomor_antrian = ?, status_antrian = ?, ruang_pemeriksaan = ? WHERE id_appointment = ?",
+        [queueNumber, status_antrian, room, id]
       );
       res.status(200).json({ message: "Status antrian berhasil diperbarui." });
     } catch (error) {
