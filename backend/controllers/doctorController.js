@@ -4,69 +4,54 @@ const User = require("../models/userModel");
 const moment = require("moment");
 
 const doctorController = {
+  // UPDATED: The queries in this function are now fixed
   getDashboardData: async (req, res) => {
-    console.log("--- START doctorController.getDashboardData ---");
-    console.log(
-      "doctorController.getDashboardData: req.user at start of controller:",
-      req.user
-    );
-
     const id_doctor = req.user.id_doctor;
     const today = moment().format("YYYY-MM-DD");
     if (!id_doctor) {
-      console.error("Doctor ID is missing from authenticated user data.");
       return res
         .status(401)
         .json({ message: "ID Dokter tidak ditemukan. Harap login kembali." });
     }
 
     try {
+      // Corrected Query for Upcoming Appointments
       const [upcomingAppointments] = await db.execute(
         `SELECT 
-                    a.id_appointment, 
-                    p.nama_lengkap AS patient_name, 
-                    a.tanggal_janji, 
-                    a.waktu_janji, 
-                    a.catatan_pasien, 
-                    a.status_janji,
-                    s.nama_layanan AS service_name -- Assuming a 'services' table exists and id_service links to it
-                 FROM APPOINTMENTS a
-                 JOIN PROFILE p ON a.id_patient = p.id_profile
-                 LEFT JOIN SERVICES s ON a.id_service = s.id_service
-                 WHERE a.id_doctor = ? 
-                 AND a.tanggal_janji >= ? 
-                 AND a.status_janji IN ('Pending', 'Confirmed') -- Assuming 'Pending' for new appointments and 'Confirmed'
-                 ORDER BY a.tanggal_janji ASC, a.waktu_janji ASC`,
+            a.id_appointment, p.nama_lengkap AS patient_name, a.tanggal_janji, 
+            a.waktu_janji, a.catatan_pasien, a.status_janji, s.nama_layanan AS service_name
+         FROM APPOINTMENTS a
+         JOIN USERS u ON a.id_patient = u.id_user
+         JOIN PROFILE p ON u.id_profile = p.id_profile
+         LEFT JOIN SERVICES s ON a.id_service = s.id_service
+         WHERE a.id_doctor = ? 
+         AND a.tanggal_janji >= ? 
+         AND a.status_janji IN ('Pending', 'Confirmed')
+         ORDER BY a.tanggal_janji ASC, a.waktu_janji ASC`,
         [id_doctor, today]
       );
 
+      // Corrected Query for Patient Queue Today
       const [patientQueue] = await db.execute(
         `SELECT 
-                    a.id_appointment, 
-                    p.nama_lengkap AS patient_name, 
-                    a.waktu_janji, 
-                    a.status_janji,
-                    s.nama_layanan AS service_name
-                 FROM APPOINTMENTS a
-                 JOIN PROFILE p ON a.id_patient = p.id_profile
-                 LEFT JOIN SERVICES s ON a.id_service = s.id_service
-                 WHERE a.id_doctor = ? 
-                 AND a.tanggal_janji = ? 
-                 AND a.status_janji IN ('Pending', 'Confirmed')
-                 ORDER BY a.waktu_janji ASC`,
+            a.id_appointment, p.nama_lengkap AS patient_name, 
+            a.waktu_janji, a.status_janji, s.nama_layanan AS service_name
+         FROM APPOINTMENTS a
+         JOIN USERS u ON a.id_patient = u.id_user
+         JOIN PROFILE p ON u.id_profile = p.id_profile
+         LEFT JOIN SERVICES s ON a.id_service = s.id_service
+         WHERE a.id_doctor = ? 
+         AND a.tanggal_janji = ? 
+         AND a.status_janji IN ('Pending', 'Confirmed')
+         ORDER BY a.waktu_janji ASC`,
         [id_doctor, today]
       );
 
       const [doctorSchedule] = await db.execute(
-        `SELECT 
-                    id_schedule, 
-                    hari_dalam_minggu, 
-                    waktu_mulai, 
-                    waktu_selesai, 
-                    is_available
-                 FROM DOCTOR_SCHEDULES
-                 WHERE id_doctor = ?
-                 ORDER BY hari_dalam_minggu ASC, waktu_mulai ASC`,
+        `SELECT id_schedule, hari_dalam_minggu, waktu_mulai, waktu_selesai, is_available
+         FROM DOCTOR_SCHEDULES
+         WHERE id_doctor = ?
+         ORDER BY hari_dalam_minggu ASC, waktu_mulai ASC`,
         [id_doctor]
       );
 
@@ -213,12 +198,14 @@ const doctorController = {
     }
 
     try {
+      // Corrected the JOIN logic here to go through USERS first
       const [appointmentDetails] = await db.execute(
         `SELECT 
               a.id_appointment, a.tanggal_janji, a.waktu_janji, a.catatan_pasien, a.status_janji, a.id_service,
               p.id_profile, p.nama_lengkap AS patient_name, p.tanggal_lahir, p.jenis_kelamin, p.no_telepon, p.email, p.nik, p.alamat
            FROM APPOINTMENTS a
-           JOIN PROFILE p ON a.id_patient = p.id_profile
+           JOIN USERS u ON a.id_patient = u.id_user
+           JOIN PROFILE p ON u.id_profile = p.id_profile
            WHERE a.id_appointment = ? AND a.id_doctor = ?`,
         [id_appointment, id_doctor]
       );
@@ -231,16 +218,11 @@ const doctorController = {
 
       const appointment = appointmentDetails[0];
 
+      // The medical history query is correct
       const [medicalHistory] = await db.execute(
         `SELECT 
-              dm.id_record, 
-              dm.examination_date, 
-              dm.chief_complaint, 
-              dm.dental_examination_findings,
-              dm.diagnosis, 
-              dm.treatment_plan, 
-              dm.actions_taken, 
-              dm.doctor_notes,
+              dm.id_record, dm.examination_date, dm.chief_complaint, dm.dental_examination_findings,
+              dm.diagnosis, dm.treatment_plan, dm.actions_taken, dm.doctor_notes,
               doc_profile.nama_lengkap AS examining_doctor_name,
               s.nama_layanan AS service_name
            FROM DENTAL_MEDICAL_RECORDS dm
@@ -271,6 +253,7 @@ const doctorController = {
     const id_doctor = req.user.id_doctor;
     const id_profile = req.body.id_profile;
 
+    // Add 'resep_obat' to the list of data from the form
     const {
       chief_complaint,
       dental_examination_findings,
@@ -278,6 +261,7 @@ const doctorController = {
       treatment_plan,
       actions_taken,
       doctor_notes,
+      resep_obat, // NEW
     } = req.body;
 
     if (
@@ -294,13 +278,11 @@ const doctorController = {
     }
 
     const connection = await db.getConnection();
-
     try {
       await connection.beginTransaction();
 
       const [apptCheck] = await connection.execute(
-        `SELECT id_appointment FROM APPOINTMENTS 
-                 WHERE id_appointment = ? AND id_doctor = ? AND id_patient = ?`,
+        `SELECT id_appointment FROM APPOINTMENTS WHERE id_appointment = ? AND id_doctor = ? AND id_patient = ?`,
         [id_appointment, id_doctor, id_profile]
       );
 
@@ -317,6 +299,7 @@ const doctorController = {
         [id_appointment]
       );
 
+      // Add resep_obat to the data object
       const examinationData = {
         id_appointment,
         id_profile,
@@ -328,14 +311,16 @@ const doctorController = {
         treatment_plan,
         actions_taken,
         doctor_notes,
+        resep_obat, // NEW
       };
 
       if (existingRecord.length > 0) {
+        // UPDATE query now includes resep_obat
         await connection.execute(
           `UPDATE DENTAL_MEDICAL_RECORDS
-                     SET chief_complaint = ?, dental_examination_findings = ?, diagnosis = ?, treatment_plan = ?,
-                         actions_taken = ?, doctor_notes = ?, examination_date = ?
-                     WHERE id_record = ?`,
+           SET chief_complaint = ?, dental_examination_findings = ?, diagnosis = ?, treatment_plan = ?,
+               actions_taken = ?, doctor_notes = ?, examination_date = ?, resep_obat = ?
+           WHERE id_record = ?`,
           [
             examinationData.chief_complaint,
             examinationData.dental_examination_findings,
@@ -344,15 +329,17 @@ const doctorController = {
             examinationData.actions_taken,
             examinationData.doctor_notes,
             examinationData.examination_date,
+            examinationData.resep_obat, // NEW
             existingRecord[0].id_record,
           ]
         );
       } else {
+        // INSERT query now includes resep_obat
         await connection.execute(
           `INSERT INTO DENTAL_MEDICAL_RECORDS (id_appointment, id_profile, id_doctor, examination_date,
-                                                        chief_complaint, dental_examination_findings, diagnosis,
-                                                        treatment_plan, actions_taken, doctor_notes)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            chief_complaint, dental_examination_findings, diagnosis,
+            treatment_plan, actions_taken, doctor_notes, resep_obat)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             examinationData.id_appointment,
             examinationData.id_profile,
@@ -364,14 +351,13 @@ const doctorController = {
             examinationData.treatment_plan,
             examinationData.actions_taken,
             examinationData.doctor_notes,
+            examinationData.resep_obat, // NEW
           ]
         );
       }
 
       await connection.execute(
-        `UPDATE APPOINTMENTS
-                 SET status_janji = 'Completed'
-                 WHERE id_appointment = ?`,
+        `UPDATE APPOINTMENTS SET status_janji = 'Completed' WHERE id_appointment = ?`,
         [id_appointment]
       );
 
