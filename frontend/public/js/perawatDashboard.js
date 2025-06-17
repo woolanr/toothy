@@ -77,6 +77,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Profile Form Elements
   const profileForm = document.getElementById("profile-form");
+  const profilePicPreview = document.getElementById("profile-pic-preview");
+  const profileFotoUrlInput = document.getElementById("profile-foto-url");
+  const profilePicUploadInput = document.getElementById("profile-pic-upload");
   const profileNamaLengkap = document.getElementById("profile-nama-lengkap");
   const profileEmail = document.getElementById("profile-email");
   const profileNoTelepon = document.getElementById("profile-no-telepon");
@@ -87,6 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const profileMessage = document.getElementById("profile-message");
 
   const logoutBtn = document.getElementById("logout-btn");
+  let selectedFileBase64 = null;
 
   // --- Utility Functions ---
   function getToken() {
@@ -218,6 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
+
   async function fetchAllAppointments() {
     appointmentsTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center">Memuat data janji temu...</td></tr>`;
     const params = new URLSearchParams();
@@ -236,6 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
+
   async function fetchDoctorsForModal(selectedDoctorId) {
     try {
       const response = await fetch(`${API_BASE_URL}/doctors`, {
@@ -255,6 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
+
   async function fetchDoctorsForFilter() {
     try {
       const response = await fetch(`${API_BASE_URL}/doctors`, {
@@ -273,6 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
+
   async function fetchServicesForModal(selectedServiceId) {
     try {
       const response = await fetch(`${API_BASE_URL}/services`, {
@@ -292,6 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
+
   async function fetchTodaysQueue() {
     todaysQueueContainer.innerHTML = `<p class="text-center text-gray-500">Memuat antrian pasien...</p>`;
     try {
@@ -325,6 +334,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (!response.ok) throw new Error("Gagal memuat profil.");
       const data = await response.json();
+
+      profilePicPreview.src =
+        data.foto_profil_url ||
+        "https://placehold.co/100x100/A0AEC0/FFFFFF?text=No+Pic";
+      profileFotoUrlInput.value = data.foto_profil_url || "";
+      profilePicUploadInput.value = null;
+      selectedFileBase64 = null;
+
       profileNamaLengkap.value = data.nama_lengkap || "";
       profileEmail.value = data.email || "";
       profileNoTelepon.value = data.no_telepon || "";
@@ -351,7 +368,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const colorClass = colors[status] || "bg-gray-200 text-gray-800";
     return `<span class="px-2 py-1 text-xs font-semibold rounded-full ${colorClass}">${status}</span>`;
   }
-
   function renderAppointmentsTable(appointments) {
     appointmentsTableBody.innerHTML = "";
     if (appointments.length === 0) {
@@ -383,7 +399,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
-
   function renderTodaysQueue(queue) {
     todaysQueueContainer.innerHTML = "";
     if (queue.length === 0) {
@@ -456,67 +471,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function renderBillingTable(billingList) {
-    paymentsTableBody.innerHTML = "";
-    if (billingList.length === 0) {
-      paymentsTableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center">Tidak ada tagihan yang perlu diproses.</td></tr>`;
-      return;
-    }
-    billingList.forEach((item) => {
-      const row = document.createElement("tr");
-      row.className = "border-b hover:bg-gray-50";
-      const isPaid = item.status_pembayaran === "Lunas";
-      row.innerHTML = `
-              <td class="p-3">${item.patient_name}</td>
-              <td class="p-3">${item.doctor_name}</td>
-              <td class="p-3">${item.service_name}</td>
-              <td class="p-3 font-medium">Rp ${Number(
-                item.service_cost
-              ).toLocaleString("id-ID")}</td>
-              <td class="p-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${
-                isPaid
-                  ? "bg-green-200 text-green-800"
-                  : "bg-red-200 text-red-800"
-              }">${item.status_pembayaran || "Belum Lunas"}</span></td>
-              <td class="p-3">
-                  <button class="payment-btn text-blue-600 hover:text-blue-800 font-medium" data-id="${
-                    item.id_appointment
-                  }">${
-        isPaid ? "Lihat Tanda Terima" : "Proses Pembayaran"
-      }</button>
-              </td>
-          `;
-      paymentsTableBody.appendChild(row);
-      row.querySelector(".payment-btn").addEventListener("click", () => {
-        const fullBillingItem = billingList.find(
-          (b) => b.id_appointment == item.id_appointment
-        );
-        openPaymentModal(fullBillingItem);
-      });
-    });
-  }
-
-  async function fetchStaffProfile() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/my-profile`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      if (!response.ok) throw new Error("Gagal memuat profil.");
-      const data = await response.json();
-      profileNamaLengkap.value = data.nama_lengkap || "";
-      profileEmail.value = data.email || "";
-      profileNoTelepon.value = data.no_telepon || "";
-      profileTanggalLahir.value = data.tanggal_lahir
-        ? data.tanggal_lahir.split("T")[0]
-        : "";
-      profileJenisKelamin.value = data.jenis_kelamin || "";
-      profileNik.value = data.nik || "";
-      profileAlamat.value = data.alamat || "";
-    } catch (error) {
-      handleApiError(error);
-    }
-  }
-
   // --- Event Listeners ---
   navDashboard.addEventListener("click", (e) => {
     e.preventDefault();
@@ -537,10 +491,6 @@ document.addEventListener("DOMContentLoaded", () => {
   navProfile.addEventListener("click", (e) => {
     e.preventDefault();
     showPage("profile");
-  });
-
-  addAppointmentBtn.addEventListener("click", () => {
-    openModal("Tambah Janji Temu Baru");
   });
   addAppointmentBtn.addEventListener("click", () => {
     openModal("Tambah Janji Temu Baru");
@@ -618,59 +568,35 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  appointmentForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const id = modalAppointmentId.value;
-    let payload, url, method;
-    if (id) {
-      method = "PUT";
-      url = `${API_BASE_URL}/appointment/${id}`;
-      payload = {
-        id_doctor: modalDoctor.value,
-        id_service: modalService.value,
-        tanggal_janji: modalDate.value,
-        waktu_janji: modalTime.value,
-        status_janji: modalStatus.value,
-        catatan_pasien: modalNotes.value,
+  profilePicUploadInput.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        profilePicPreview.src = e.target.result;
+        profileFotoUrlInput.value = "";
+        selectedFileBase64 = e.target.result;
       };
-    } else {
-      method = "POST";
-      url = `${API_BASE_URL}/appointment`;
-      payload = {
-        patient_name: modalPatientName.value,
-        id_doctor: modalDoctor.value,
-        id_service: modalService.value,
-        tanggal_janji: modalDate.value,
-        waktu_janji: modalTime.value,
-        status_janji: modalStatus.value,
-        catatan_pasien: modalNotes.value,
-      };
+      reader.readAsDataURL(file);
     }
-    try {
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getToken()}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || "Gagal menyimpan janji temu.");
-      }
-      const result = await response.json();
-      alert(result.message);
-      closeModal();
-      fetchAllAppointments();
-      fetchDashboardSummary();
-    } catch (error) {
-      handleApiError(error);
-    }
+  });
+
+  profileFotoUrlInput.addEventListener("input", () => {
+    profilePicUploadInput.value = null;
+    selectedFileBase64 = null;
+    profilePicPreview.src =
+      profileFotoUrlInput.value ||
+      "https://placehold.co/100x100/A0AEC0/FFFFFF?text=No+Pic";
   });
 
   profileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    let photoData = profileFotoUrlInput.value;
+    if (selectedFileBase64) {
+      photoData = selectedFileBase64;
+    }
+
     const payload = {
       nama_lengkap: profileNamaLengkap.value,
       email: profileEmail.value,
@@ -679,7 +605,9 @@ document.addEventListener("DOMContentLoaded", () => {
       jenis_kelamin: profileJenisKelamin.value,
       nik: profileNik.value,
       alamat: profileAlamat.value,
+      foto_profil_url: photoData,
     };
+
     try {
       const response = await fetch(`${API_BASE_URL}/my-profile`, {
         method: "PUT",
@@ -689,11 +617,14 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         body: JSON.stringify(payload),
       });
+
       const result = await response.json();
       if (!response.ok)
         throw new Error(result.message || "Gagal menyimpan profil.");
+
       profileMessage.textContent = result.message;
       profileMessage.className = "text-sm text-center text-green-600";
+      fetchStaffProfile();
       setTimeout(() => (profileMessage.textContent = ""), 3000);
     } catch (error) {
       profileMessage.textContent = error.message;

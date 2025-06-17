@@ -31,7 +31,7 @@ const perawatController = {
 
   getAllAppointments: async (req, res) => {
     try {
-      const query = `
+      let query = `
         SELECT 
           a.id_appointment, a.id_doctor, a.id_patient, a.id_service,
           p.nama_lengkap AS patient_name,
@@ -43,9 +43,33 @@ const perawatController = {
         JOIN DOCTORS doc ON a.id_doctor = doc.id_doctor
         JOIN USERS u_doctor ON doc.id_user = u_doctor.id_user
         JOIN PROFILE d_profile ON u_doctor.id_profile = d_profile.id_profile
-        ORDER BY a.tanggal_janji DESC, a.waktu_janji DESC
       `;
-      const [appointments] = await db.execute(query);
+
+      const conditions = [];
+      const values = [];
+
+      // Check for each filter and add it to the query
+      if (req.query.date) {
+        conditions.push("a.tanggal_janji = ?");
+        values.push(req.query.date);
+      }
+      if (req.query.doctor) {
+        conditions.push("a.id_doctor = ?");
+        values.push(req.query.doctor);
+      }
+      if (req.query.status) {
+        conditions.push("a.status_janji = ?");
+        values.push(req.query.status);
+      }
+
+      // If any filters exist, add the WHERE clause
+      if (conditions.length > 0) {
+        query += " WHERE " + conditions.join(" AND ");
+      }
+
+      query += " ORDER BY a.tanggal_janji DESC, a.waktu_janji DESC";
+
+      const [appointments] = await db.execute(query, values);
       res.status(200).json(appointments);
     } catch (error) {
       console.error("Error fetching all appointments:", error);
@@ -296,8 +320,10 @@ const perawatController = {
 
   getStaffProfile: async (req, res) => {
     try {
+      // The user's info is already in req.user from the protect middleware
       const [profile] = await db.execute(
-        `SELECT p.nama_lengkap, p.email, p.no_telepon, p.tanggal_lahir, p.jenis_kelamin, p.alamat, p.nik 
+        // ADDED `p.foto_profil_url` to the SELECT statement
+        `SELECT p.nama_lengkap, p.email, p.no_telepon, p.tanggal_lahir, p.jenis_kelamin, p.alamat, p.nik, p.foto_profil_url 
              FROM PROFILE p WHERE id_profile = ?`,
         [req.user.id_profile]
       );
@@ -311,6 +337,7 @@ const perawatController = {
     }
   },
 
+  // --- Update Staff Profile function remains correct ---
   updateStaffProfile: async (req, res) => {
     const id_profile = req.user.id_profile;
     const {
@@ -321,6 +348,7 @@ const perawatController = {
       jenis_kelamin,
       alamat,
       nik,
+      foto_profil_url,
     } = req.body;
 
     try {
@@ -332,6 +360,7 @@ const perawatController = {
         jenis_kelamin,
         alamat,
         nik,
+        foto_profil_url,
       });
       res.status(200).json({ message: "Profil berhasil diperbarui!" });
     } catch (error) {
