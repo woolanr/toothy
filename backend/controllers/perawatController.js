@@ -1,6 +1,6 @@
 const db = require("../config/database");
 const moment = require("moment");
-const User = require("../models/userModel"); // THIS LINE WAS MISSING
+const User = require("../models/userModel");
 
 const perawatController = {
   getSummary: async (req, res) => {
@@ -48,7 +48,6 @@ const perawatController = {
       const conditions = [];
       const values = [];
 
-      // Check for each filter and add it to the query
       if (req.query.date) {
         conditions.push("a.tanggal_janji = ?");
         values.push(req.query.date);
@@ -62,7 +61,6 @@ const perawatController = {
         values.push(req.query.status);
       }
 
-      // If any filters exist, add the WHERE clause
       if (conditions.length > 0) {
         query += " WHERE " + conditions.join(" AND ");
       }
@@ -170,10 +168,12 @@ const perawatController = {
       !waktu_janji ||
       !status_janji
     ) {
-      return res.status(400).json({
-        message:
-          "Nama pasien, dokter, layanan, tanggal, waktu, dan status wajib diisi.",
-      });
+      return res
+        .status(400)
+        .json({
+          message:
+            "Nama pasien, dokter, layanan, tanggal, waktu, dan status wajib diisi.",
+        });
     }
 
     const connection = await db.getConnection();
@@ -231,8 +231,7 @@ const perawatController = {
     try {
       const query = `
         SELECT 
-          a.id_appointment, p.nama_lengkap AS patient_name,
-          d_profile.nama_lengkap AS doctor_name,
+          a.id_appointment, p.nama_lengkap AS patient_name, d_profile.nama_lengkap AS doctor_name,
           a.nomor_antrian, a.status_antrian, a.ruang_pemeriksaan
         FROM APPOINTMENTS a
         JOIN USERS u_patient ON a.id_patient = u_patient.id_user
@@ -256,7 +255,6 @@ const perawatController = {
     const { nomor_antrian, status_antrian, ruang_pemeriksaan } = req.body;
     const queueNumber = nomor_antrian ? parseInt(nomor_antrian) : null;
     const room = ruang_pemeriksaan || null;
-
     try {
       await db.execute(
         "UPDATE APPOINTMENTS SET nomor_antrian = ?, status_antrian = ?, ruang_pemeriksaan = ? WHERE id_appointment = ?",
@@ -273,12 +271,8 @@ const perawatController = {
     try {
       const query = `
         SELECT 
-          a.id_appointment,
-          p.nama_lengkap AS patient_name,
-          d_profile.nama_lengkap AS doctor_name,
-          s.nama_layanan AS service_name,
-          s.harga AS service_cost,
-          pay.status_pembayaran
+          a.id_appointment, p.nama_lengkap AS patient_name, d_profile.nama_lengkap AS doctor_name,
+          s.nama_layanan AS service_name, s.harga AS service_cost, pay.status_pembayaran
         FROM APPOINTMENTS a
         JOIN USERS u_patient ON a.id_patient = u_patient.id_user
         JOIN PROFILE p ON u_patient.id_profile = p.id_profile
@@ -307,10 +301,21 @@ const perawatController = {
         .json({ message: "Data pembayaran tidak lengkap." });
     }
     try {
-      await db.execute(
-        "INSERT INTO PAYMENTS (id_appointment, jumlah_pembayaran, metode_pembayaran, status_pembayaran) VALUES (?, ?, ?, ?)",
-        [id_appointment, jumlah_pembayaran, metode_pembayaran, "Lunas"]
+      const [existing] = await db.execute(
+        "SELECT id_payment FROM PAYMENTS WHERE id_appointment = ?",
+        [id_appointment]
       );
+      if (existing.length > 0) {
+        await db.execute(
+          "UPDATE PAYMENTS SET jumlah_pembayaran = ?, metode_pembayaran = ?, status_pembayaran = 'Lunas' WHERE id_appointment = ?",
+          [jumlah_pembayaran, metode_pembayaran, id_appointment]
+        );
+      } else {
+        await db.execute(
+          "INSERT INTO PAYMENTS (id_appointment, jumlah_pembayaran, metode_pembayaran, status_pembayaran) VALUES (?, ?, ?, ?)",
+          [id_appointment, jumlah_pembayaran, metode_pembayaran, "Lunas"]
+        );
+      }
       res.status(201).json({ message: "Pembayaran berhasil diproses!" });
     } catch (error) {
       console.error("Error processing payment:", error);
@@ -320,9 +325,7 @@ const perawatController = {
 
   getStaffProfile: async (req, res) => {
     try {
-      // The user's info is already in req.user from the protect middleware
       const [profile] = await db.execute(
-        // ADDED `p.foto_profil_url` to the SELECT statement
         `SELECT p.nama_lengkap, p.email, p.no_telepon, p.tanggal_lahir, p.jenis_kelamin, p.alamat, p.nik, p.foto_profil_url 
              FROM PROFILE p WHERE id_profile = ?`,
         [req.user.id_profile]
@@ -337,7 +340,6 @@ const perawatController = {
     }
   },
 
-  // --- Update Staff Profile function remains correct ---
   updateStaffProfile: async (req, res) => {
     const id_profile = req.user.id_profile;
     const {
@@ -350,7 +352,6 @@ const perawatController = {
       nik,
       foto_profil_url,
     } = req.body;
-
     try {
       await User.updateProfile(id_profile, {
         nama_lengkap,

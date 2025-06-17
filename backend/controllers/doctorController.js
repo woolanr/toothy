@@ -251,17 +251,15 @@ const doctorController = {
   saveExaminationResult: async (req, res) => {
     const { id_appointment } = req.params;
     const id_doctor = req.user.id_doctor;
-    const id_profile = req.body.id_profile;
-
-    // Add 'resep_obat' to the list of data from the form
     const {
+      id_profile,
       chief_complaint,
       dental_examination_findings,
       diagnosis,
       treatment_plan,
       actions_taken,
       doctor_notes,
-      resep_obat, // NEW
+      resep_obat,
     } = req.body;
 
     if (
@@ -281,77 +279,44 @@ const doctorController = {
     try {
       await connection.beginTransaction();
 
-      const [apptCheck] = await connection.execute(
-        `SELECT id_appointment FROM APPOINTMENTS WHERE id_appointment = ? AND id_doctor = ? AND id_patient = ?`,
-        [id_appointment, id_doctor, id_profile]
-      );
-
-      if (apptCheck.length === 0) {
-        await connection.rollback();
-        return res.status(403).json({
-          message:
-            "Janji temu tidak valid atau tidak terkait dengan dokter dan pasien ini.",
-        });
-      }
-
       const [existingRecord] = await connection.execute(
         "SELECT id_record FROM DENTAL_MEDICAL_RECORDS WHERE id_appointment = ?",
         [id_appointment]
       );
 
-      // Add resep_obat to the data object
-      const examinationData = {
-        id_appointment,
-        id_profile,
-        id_doctor,
-        examination_date: moment().format("YYYY-MM-DD HH:mm:ss"),
-        chief_complaint,
-        dental_examination_findings,
-        diagnosis,
-        treatment_plan,
-        actions_taken,
-        doctor_notes,
-        resep_obat, // NEW
-      };
-
       if (existingRecord.length > 0) {
-        // UPDATE query now includes resep_obat
         await connection.execute(
           `UPDATE DENTAL_MEDICAL_RECORDS
            SET chief_complaint = ?, dental_examination_findings = ?, diagnosis = ?, treatment_plan = ?,
-               actions_taken = ?, doctor_notes = ?, examination_date = ?, resep_obat = ?
+               actions_taken = ?, doctor_notes = ?, resep_obat = ?
            WHERE id_record = ?`,
           [
-            examinationData.chief_complaint,
-            examinationData.dental_examination_findings,
-            examinationData.diagnosis,
-            examinationData.treatment_plan,
-            examinationData.actions_taken,
-            examinationData.doctor_notes,
-            examinationData.examination_date,
-            examinationData.resep_obat, // NEW
+            chief_complaint,
+            dental_examination_findings,
+            diagnosis,
+            treatment_plan,
+            actions_taken,
+            doctor_notes,
+            resep_obat || null,
             existingRecord[0].id_record,
           ]
         );
       } else {
-        // INSERT query now includes resep_obat
         await connection.execute(
-          `INSERT INTO DENTAL_MEDICAL_RECORDS (id_appointment, id_profile, id_doctor, examination_date,
-            chief_complaint, dental_examination_findings, diagnosis,
-            treatment_plan, actions_taken, doctor_notes, resep_obat)
+          `INSERT INTO DENTAL_MEDICAL_RECORDS (id_appointment, id_profile, id_doctor, examination_date, chief_complaint, dental_examination_findings, diagnosis, treatment_plan, actions_taken, doctor_notes, resep_obat)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
-            examinationData.id_appointment,
-            examinationData.id_profile,
-            examinationData.id_doctor,
-            examinationData.examination_date,
-            examinationData.chief_complaint,
-            examinationData.dental_examination_findings,
-            examinationData.diagnosis,
-            examinationData.treatment_plan,
-            examinationData.actions_taken,
-            examinationData.doctor_notes,
-            examinationData.resep_obat, // NEW
+            id_appointment,
+            id_profile,
+            id_doctor,
+            new Date(),
+            chief_complaint,
+            dental_examination_findings,
+            diagnosis,
+            treatment_plan,
+            actions_taken,
+            doctor_notes,
+            resep_obat || null,
           ]
         );
       }
@@ -386,7 +351,6 @@ const doctorController = {
       waktu_selesai,
       is_available,
     } = req.body;
-
     if (
       !id_doctor ||
       !hari_dalam_minggu ||
@@ -399,13 +363,12 @@ const doctorController = {
           "Data jadwal tidak lengkap (hari, waktu mulai, waktu selesai, dan ketersediaan wajib diisi).",
       });
     }
-
     try {
       if (id_schedule) {
         const [result] = await db.execute(
           `UPDATE DOCTOR_SCHEDULES
-                     SET hari_dalam_minggu = ?, waktu_mulai = ?, waktu_selesai = ?, is_available = ?
-                     WHERE id_schedule = ? AND id_doctor = ?`,
+           SET hari_dalam_minggu = ?, waktu_mulai = ?, waktu_selesai = ?, is_available = ?
+           WHERE id_schedule = ? AND id_doctor = ?`,
           [
             hari_dalam_minggu,
             waktu_mulai,
@@ -425,7 +388,7 @@ const doctorController = {
       } else {
         const [result] = await db.execute(
           `INSERT INTO DOCTOR_SCHEDULES (id_doctor, hari_dalam_minggu, waktu_mulai, waktu_selesai, is_available)
-                     VALUES (?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?)`,
           [
             id_doctor,
             hari_dalam_minggu,
