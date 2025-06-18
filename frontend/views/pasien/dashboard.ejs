@@ -2,147 +2,208 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <title>Dashboard Pasien - Happy Toothy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dasbor Pasien - Happy Toothy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f9fafb;
+      }
+      .nav-link.active {
+        background-color: #e0f2fe;
+        color: #1e40af;
+        font-weight: 600;
+      }
+    </style>
   </head>
   <body>
-    <header>
-      <h1>Selamat Datang, <span id="patientDashboard_nama">Pasien</span>!</h1>
-      <button id="patientLogoutBtn">Logout</button>
-    </header>
-
-    <main class="container">
-      <section id="completeProfileSection" style="display: none" class="card">
-        <h2>Lengkapi Profil Anda</h2>
-        <p>
-          Untuk dapat menggunakan semua fitur, termasuk membuat janji temu,
-          mohon lengkapi data profil Anda.
-        </p>
-        <form id="patientProfileForm" class="auth-form">
-          <div class="form-group">
-            <label for="profile_nama_lengkap">Nama Lengkap</label>
-            <input
-              type="text"
-              id="profile_nama_lengkap"
-              name="nama_lengkap"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="profile_email">Email (tidak dapat diubah)</label>
-            <input
-              type="email"
-              id="profile_email"
-              name="email"
-              readonly
-              disabled
-            />
-          </div>
-          <div class="form-group">
-            <label for="profile_jenis_kelamin">Jenis Kelamin</label>
-            <select id="profile_jenis_kelamin" name="jenis_kelamin" required>
-              <option value="">Pilih...</option>
-              <option value="Laki-laki">Laki-laki</option>
-              <option value="Perempuan">Perempuan</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="profile_tanggal_lahir">Tanggal Lahir</label>
-            <input
-              type="date"
-              id="profile_tanggal_lahir"
-              name="tanggal_lahir"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="profile_alamat">Alamat Lengkap</label>
-            <textarea
-              id="profile_alamat"
-              name="alamat"
-              rows="3"
-              required
-            ></textarea>
-          </div>
-          <div class="form-group">
-            <label for="profile_no_telepon">No. Telepon</label>
-            <input
-              type="tel"
-              id="profile_no_telepon"
-              name="no_telepon"
-              required
-            />
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Simpan Profil</button>
-          </div>
-        </form>
-      </section>
-
-      <section id="mainPatientDashboardContent" style="display: none">
-        <h2>Dashboard Saya</h2>
-
-        <div class="dashboard-section card">
-          <h3>Profil Saya</h3>
-          <p>Username: <span id="patientDashboard_username">-</span></p>
+    <div class="flex h-screen bg-gray-50">
+      <!-- Sidebar Navigation -->
+      <nav class="w-64 bg-white p-6 shadow-md flex flex-col justify-between">
+        <div>
+          <h1 class="text-3xl font-extrabold mb-8 text-blue-600">
+            Happy Toothy
+          </h1>
+          <ul class="space-y-2">
+            <li>
+              <a
+                href="#"
+                id="nav-dashboard"
+                class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors duration-200 active"
+                ><i class="fas fa-home mr-3 w-5 text-center"></i> Dasbor</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                id="nav-booking"
+                class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors duration-200"
+                ><i class="fas fa-calendar-plus mr-3 w-5 text-center"></i>
+                Booking Online</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                id="nav-history"
+                class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors duration-200"
+                ><i class="fas fa-history mr-3 w-5 text-center"></i> Riwayat
+                Kunjungan</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                id="nav-profile"
+                class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors duration-200"
+                ><i class="fas fa-user-edit mr-3 w-5 text-center"></i> Profil
+                Saya</a
+              >
+            </li>
+          </ul>
         </div>
+        <button
+          id="logout-btn"
+          class="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out"
+        >
+          <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+        </button>
+      </nav>
 
-        <div class="dashboard-section card" id="bookingSection">
-          <h3>Buat Janji Temu Baru</h3>
-          <form id="newAppointmentForm" class="auth-form">
-            <div class="form-group">
-              <label for="serviceSelect">Pilih Layanan:</label>
-              <select id="serviceSelect" name="id_service" required></select>
+      <!-- Main Content -->
+      <main class="flex-1 p-8 overflow-y-auto">
+        <!-- Dashboard Content -->
+        <section id="dashboard-content" class="page-content">
+          <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            Selamat Datang, <span id="patient-name-greeting"></span>!
+          </h2>
+          <div class="space-y-6">
+            <div>
+              <h3 class="text-xl font-semibold text-gray-700 mb-3">
+                Janji Temu Akan Datang
+              </h3>
+              <div
+                id="upcoming-appointment-card"
+                class="bg-white p-6 rounded-lg shadow-sm"
+              >
+                <p class="text-gray-500">Memuat janji temu...</p>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="doctorSelect">Pilih Dokter:</label>
-              <select id="doctorSelect" name="id_doctor" required></select>
+            <div>
+              <h3 class="text-xl font-semibold text-gray-700 mb-3">
+                Notifikasi
+              </h3>
+              <div
+                class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg shadow-sm"
+              >
+                <p>
+                  Jangan lupa untuk datang 15 menit lebih awal untuk janji temu
+                  Anda!
+                </p>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="appointmentDate">Tanggal Janji Temu:</label>
-              <input
-                type="date"
-                id="appointmentDate"
-                name="tanggal_janji"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="appointmentTime">Waktu Janji Temu:</label>
-              <select id="appointmentTime" name="waktu_janji" required>
-                <option value="">Pilih tanggal dan dokter dulu</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="patientNotes">Catatan (Opsional):</label>
-              <textarea
-                id="patientNotes"
-                name="catatan_pasien"
-                rows="3"
-              ></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">
-              Buat Janji Temu
-            </button>
+          </div>
+        </section>
+
+        <!-- Online Booking Content -->
+        <section id="booking-content" class="page-content hidden">
+          <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            Booking Janji Temu Online
+          </h2>
+          <div class="bg-white p-8 rounded-lg shadow-md max-w-2xl mx-auto">
+            <form id="booking-form" class="space-y-6">
+              <div>
+                <label
+                  for="booking-service"
+                  class="block text-sm font-medium text-gray-700"
+                  >1. Pilih Layanan</label
+                >
+                <select
+                  id="booking-service"
+                  required
+                  class="mt-1 w-full p-2 border rounded-md"
+                ></select>
+              </div>
+              <div>
+                <label
+                  for="booking-doctor"
+                  class="block text-sm font-medium text-gray-700"
+                  >2. Pilih Dokter</label
+                >
+                <select
+                  id="booking-doctor"
+                  required
+                  class="mt-1 w-full p-2 border rounded-md"
+                ></select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >3. Pilih Tanggal & Waktu</label
+                >
+                <div
+                  id="doctor-availability"
+                  class="mt-2 text-sm text-gray-600"
+                >
+                  Pilih dokter terlebih dahulu untuk melihat jadwal.
+                </div>
+              </div>
+              <div>
+                <label
+                  for="booking-notes"
+                  class="block text-sm font-medium text-gray-700"
+                  >4. Masukkan Keluhan/Catatan Awal</label
+                >
+                <textarea
+                  id="booking-notes"
+                  rows="4"
+                  class="mt-1 w-full p-2 border rounded-md"
+                  placeholder="Contoh: Gigi geraham kanan bawah sakit saat mengunyah..."
+                ></textarea>
+              </div>
+              <button
+                type="submit"
+                class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700"
+              >
+                Konfirmasi Booking
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- History Content -->
+        <section id="history-content" class="page-content hidden">
+          <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            Riwayat Kunjungan & Medis
+          </h2>
+          <div id="history-container" class="space-y-4">
+            <p class="text-center text-gray-500">Memuat riwayat...</p>
+          </div>
+        </section>
+
+        <!-- Profile Content -->
+        <section id="profile-content" class="page-content hidden">
+          <!-- We can reuse the profile form from the Staff dashboard here -->
+          <h2 class="text-3xl font-bold text-gray-800 mb-8">Profil Saya</h2>
+          <form
+            id="profile-form"
+            class="space-y-6 bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto"
+          >
+            <!-- Profile form content will go here -->
           </form>
-        </div>
+        </section>
+      </main>
+    </div>
 
-        <div class="dashboard-section card">
-          <h3>Janji Temu Mendatang</h3>
-          <ul id="upcomingAppointments">
-            <li>Memuat janji temu...</li>
-          </ul>
-        </div>
-
-        <div class="dashboard-section card">
-          <h3>Riwayat Kunjungan</h3>
-          <ul id="visitHistory">
-            <li>Memuat riwayat...</li>
-          </ul>
-        </div>
-      </section>
-    </main>
-
-    <script src="/js/script.js"></script>
+    <script src="/js/patientDashboard.js"></script>
   </body>
 </html>
