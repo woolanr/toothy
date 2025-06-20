@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const API_BASE_URL = "http://localhost:3000/perawat";
+  let allAppointmentsData = [];
 
   // --- DOM Elements ---
   const dashboardContent = document.getElementById("dashboard-content");
@@ -97,46 +98,85 @@ document.addEventListener("DOMContentLoaded", () => {
   function getToken() {
     return localStorage.getItem("token");
   }
+  function showSuccessToast(message) {
+    Toastify({
+      text: message,
+      duration: 3000,
+      gravity: "bottom",
+      position: "center",
+      style: { background: "linear-gradient(to right, #00b09b, #96c93d)" },
+    }).showToast();
+  }
+  function showSuccessToast(message) {
+    Toastify({
+      text: message,
+      duration: 3000,
+      gravity: "bottom",
+      position: "center",
+      style: { background: "linear-gradient(to right, #00b09b, #96c93d)" },
+    }).showToast();
+  }
   function handleApiError(error) {
     console.error("API Error:", error);
-    alert("Terjadi kesalahan: " + error.message);
+    showErrorToast("Terjadi kesalahan: " + error.message);
   }
 
   // --- View Management ---
   function showPage(pageId) {
-    [
-      dashboardContent,
-      appointmentsContent,
-      queueContent,
-      paymentsContent,
-      profileContent,
-    ].forEach((p) => p.classList.add("hidden"));
-    [navDashboard, navAppointments, navQueue, navPayments, navProfile].forEach(
-      (n) => n.classList.remove("active")
-    );
+    const pages = {
+      dashboard: dashboardContent,
+      appointments: appointmentsContent,
+      queue: queueContent,
+      payments: paymentsContent,
+      profile: profileContent,
+    };
+    const navs = {
+      dashboard: navDashboard,
+      appointments: navAppointments,
+      queue: navQueue,
+      payments: navPayments,
+      profile: navProfile,
+    };
+    let currentPage = null;
+    for (const key in pages) {
+      if (!pages[key].classList.contains("hidden")) {
+        currentPage = pages[key];
+        break;
+      }
+    }
+    if (currentPage && currentPage !== pages[pageId]) {
+      currentPage.style.opacity = "0";
+      setTimeout(() => {
+        currentPage.classList.add("hidden");
+        showNewPage(pageId, pages, navs);
+      }, 300);
+    } else {
+      showNewPage(pageId, pages, navs);
+    }
+  }
 
-    if (pageId === "dashboard") {
-      dashboardContent.classList.remove("hidden");
-      navDashboard.classList.add("active");
-      fetchDashboardSummary();
-    } else if (pageId === "queue") {
-      queueContent.classList.remove("hidden");
-      navQueue.classList.add("active");
-      fetchTodaysQueue();
-    } else if (pageId === "appointments") {
-      appointmentsContent.classList.remove("hidden");
-      navAppointments.classList.add("active");
+  function showNewPage(pageId, pages, navs) {
+    Object.values(pages).forEach((p) => p.classList.add("hidden"));
+    Object.values(navs).forEach((n) => n.classList.remove("active"));
+    const newPage = pages[pageId];
+    const newNav = navs[pageId];
+    if (newPage) {
+      newPage.style.opacity = "0";
+      newPage.classList.remove("hidden");
+      setTimeout(() => {
+        newPage.style.opacity = "1";
+      }, 10);
+    }
+    if (newNav) {
+      newNav.classList.add("active");
+    }
+    if (pageId === "dashboard") fetchDashboardSummary();
+    else if (pageId === "queue") fetchTodaysQueue();
+    else if (pageId === "appointments") {
       fetchAllAppointments();
       fetchDoctorsForFilter();
-    } else if (pageId === "payments") {
-      paymentsContent.classList.remove("hidden");
-      navPayments.classList.add("active");
-      fetchBillingList();
-    } else if (pageId === "profile") {
-      profileContent.classList.remove("hidden");
-      navProfile.classList.add("active");
-      fetchStaffProfile();
-    }
+    } else if (pageId === "payments") fetchBillingList();
+    else if (pageId === "profile") fetchStaffProfile();
   }
 
   // --- Modal Management ---
@@ -238,8 +278,8 @@ document.addEventListener("DOMContentLoaded", () => {
         { headers: { Authorization: `Bearer ${getToken()}` } }
       );
       if (!response.ok) throw new Error("Gagal memuat daftar janji temu.");
-      const appointments = await response.json();
-      renderAppointmentsTable(appointments);
+      allAppointmentsData = await response.json();
+      renderAppointmentsTable(allAppointmentsData);
     } catch (error) {
       handleApiError(error);
     }
@@ -364,6 +404,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const colors = {
       Pending: "bg-yellow-200 text-yellow-800",
       Confirmed: "bg-blue-200 text-blue-800",
+      "Checked-in": "bg-indigo-200 text-indigo-800", // <-- ADD THIS LINE
       Completed: "bg-green-200 text-green-800",
       Cancelled: "bg-red-200 text-red-800",
       Rescheduled: "bg-purple-200 text-purple-800",
@@ -371,37 +412,116 @@ document.addEventListener("DOMContentLoaded", () => {
     const colorClass = colors[status] || "bg-gray-200 text-gray-800";
     return `<span class="px-2 py-1 text-xs font-semibold rounded-full ${colorClass}">${status}</span>`;
   }
+
   function renderAppointmentsTable(appointments) {
     appointmentsTableBody.innerHTML = "";
     if (appointments.length === 0) {
       appointmentsTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center">Tidak ada data janji temu yang cocok.</td></tr>`;
       return;
     }
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const today = `${year}-${month}-${day}`;
     appointments.forEach((appt) => {
       const row = document.createElement("tr");
       row.className = "border-b hover:bg-gray-50";
-      row.innerHTML = `
-            <td class="p-3">${appt.patient_name}</td>
-            <td class="p-3">${appt.doctor_name}</td>
-            <td class="p-3">${new Date(appt.tanggal_janji).toLocaleDateString(
-              "id-ID",
-              { day: "2-digit", month: "long", year: "numeric" }
-            )} - ${appt.waktu_janji.substring(0, 5)}</td>
-            <td class="p-3">${getStatusBadge(appt.status_janji)}</td>
-            <td class="p-3"><button class="edit-btn text-blue-600 hover:text-blue-800 font-medium" data-id="${
-              appt.id_appointment
-            }">Detail</button></td>
-        `;
+      const appointmentDate = appt.tanggal_janji.split("T")[0];
+      const isToday = appointmentDate === today;
+      let actionButtonsHTML = "";
+      const status = appt.status_janji.toLowerCase();
+      if (status === "pending") {
+        actionButtonsHTML += `<button class="confirm-btn text-white bg-green-500 hover:bg-green-600 font-medium rounded-lg text-sm px-3 py-1.5 text-center" data-id="${appt.id_appointment}" title="Konfirmasi Janji Temu">Konfirmasi</button>`;
+      } else if (status === "confirmed" && isToday) {
+        actionButtonsHTML += `<button class="check-in-btn text-white bg-blue-500 hover:bg-blue-600 font-medium rounded-lg text-sm px-3 py-1.5 text-center" data-id="${appt.id_appointment}" title="Check-in Pasien">Check-in</button>`;
+      }
+      actionButtonsHTML += `<button class="edit-btn text-gray-500 hover:text-blue-600 font-medium ml-2" data-id="${appt.id_appointment}" title="Lihat Detail"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg></button>`;
+      row.innerHTML = `<td class="p-3">${
+        appt.patient_name
+      }</td><td class="p-3">${appt.doctor_name}</td><td class="p-3">${new Date(
+        appt.tanggal_janji
+      ).toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      })} - ${appt.waktu_janji.substring(
+        0,
+        5
+      )}</td><td class="p-3">${getStatusBadge(
+        appt.status_janji
+      )}</td><td class="p-3 flex items-center">${actionButtonsHTML}</td>`;
       appointmentsTableBody.appendChild(row);
-      row.querySelector(".edit-btn").addEventListener("click", (e) => {
-        const appointmentId = e.target.getAttribute("data-id");
-        const appointmentData = appointments.find(
-          (a) => a.id_appointment == appointmentId
-        );
-        openModal("Detail Janji Temu", appointmentData);
-      });
+      const detailBtn = row.querySelector(".edit-btn");
+      if (detailBtn) {
+        detailBtn.addEventListener("click", (e) => {
+          const appointmentId = e.currentTarget.getAttribute("data-id");
+          const appointmentData = allAppointmentsData.find(
+            (a) => a.id_appointment == appointmentId
+          );
+          openModal("Detail Janji Temu", appointmentData);
+        });
+      }
+      const confirmBtn = row.querySelector(".confirm-btn");
+      if (confirmBtn) {
+        confirmBtn.addEventListener("click", (e) => {
+          const appointmentId = e.currentTarget.getAttribute("data-id");
+          Swal.fire({
+            title: "Konfirmasi Janji Temu?",
+            text: "Pasien akan menerima notifikasi email setelah dikonfirmasi.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#28a745",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Ya, konfirmasi!",
+            cancelButtonText: "Batal",
+          }).then(async (result) => {
+            if (result.isConfirmed) {
+              try {
+                const response = await fetch(
+                  `http://localhost:3000/api/appointments/${appointmentId}/status`,
+                  {
+                    method: "PUT",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${getToken()}`,
+                    },
+                    body: JSON.stringify({ status_janji: "confirmed" }),
+                  }
+                );
+                if (!response.ok) {
+                  const errData = await response.json();
+                  throw new Error(errData.message);
+                }
+                showSuccessToast("Janji temu berhasil dikonfirmasi!");
+                const updatedIndex = allAppointmentsData.findIndex(
+                  (appt) => appt.id_appointment == appointmentId
+                );
+                if (updatedIndex !== -1) {
+                  allAppointmentsData[updatedIndex].status_janji = "Confirmed";
+                }
+                renderAppointmentsTable(allAppointmentsData);
+                fetchDashboardSummary();
+              } catch (error) {
+                handleApiError(error);
+              }
+            }
+          });
+        });
+      }
+      const checkInBtn = row.querySelector(".check-in-btn");
+      if (checkInBtn) {
+        checkInBtn.addEventListener("click", (e) => {
+          const appointmentId = e.currentTarget.getAttribute("data-id");
+          const appointmentData = allAppointmentsData.find(
+            (a) => a.id_appointment == appointmentId
+          );
+          openQueueModal(appointmentData);
+        });
+      }
     });
   }
+
   function renderTodaysQueue(queue) {
     todaysQueueContainer.innerHTML = "";
     if (queue.length === 0) {
@@ -519,13 +639,11 @@ document.addEventListener("DOMContentLoaded", () => {
   queueForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const id = queueAppointmentId.value;
-
     const payload = {
       nomor_antrian: queueNumberInput.value,
       status_antrian: queueStatusSelect.value,
-      ruang_pemeriksaan: queueRoomInput.value, // NEW
+      ruang_pemeriksaan: queueRoomInput.value,
     };
-
     try {
       const response = await fetch(`${API_BASE_URL}/queue/${id}`, {
         method: "PUT",
@@ -535,16 +653,15 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         body: JSON.stringify(payload),
       });
-
       if (!response.ok) {
         const errData = await response.json();
-        throw new Error(errData.message || "Gagal memperbarui status antrian.");
+        throw new Error(errData.message || "Gagal memperbarui antrian.");
       }
-
       const result = await response.json();
-      alert(result.message);
+      showSuccessToast(result.message); // REPLACED alert()
       closeQueueModal();
-      fetchTodaysQueue(); // Refresh the queue view
+      fetchTodaysQueue();
+      fetchDashboardSummary();
     } catch (error) {
       handleApiError(error);
     }
@@ -573,7 +690,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(errData.message || "Gagal memproses pembayaran.");
       }
       const result = await response.json();
-      alert(result.message);
+      showSuccessToast(result.message); // REPLACED alert()
       closePaymentModal();
       fetchBillingList();
     } catch (error) {
@@ -687,7 +804,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(errData.message || "Gagal menyimpan janji temu.");
       }
       const result = await response.json();
-      alert(result.message);
+      showSuccessToast(result.message); // REPLACED alert()
       closeModal();
       fetchAllAppointments();
       fetchDashboardSummary();

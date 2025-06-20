@@ -8,6 +8,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const pasienRoutes = require("./routes/pasienRoutes");
 const doctorRoutes = require("./routes/doctorRoutes");
 const perawatRoutes = require("./routes/perawatRoutes");
+const appointmentRoutes = require("./routes/appointment.routes.js");
 
 const app = express();
 const port = 3000;
@@ -101,6 +102,7 @@ app.use("/admin", adminRoutes);
 app.use("/pasien", pasienRoutes);
 app.use("/dokter", doctorRoutes);
 app.use("/perawat", perawatRoutes);
+app.use("/api/appointments", appointmentRoutes);
 
 // --- Error Handling Middleware ---
 app.use((req, res, next) => {

@@ -168,12 +168,10 @@ const perawatController = {
       !waktu_janji ||
       !status_janji
     ) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Nama pasien, dokter, layanan, tanggal, waktu, dan status wajib diisi.",
-        });
+      return res.status(400).json({
+        message:
+          "Nama pasien, dokter, layanan, tanggal, waktu, dan status wajib diisi.",
+      });
     }
 
     const connection = await db.getConnection();
@@ -251,16 +249,28 @@ const perawatController = {
   },
 
   updateQueueStatus: async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params; // This is the id_appointment
     const { nomor_antrian, status_antrian, ruang_pemeriksaan } = req.body;
     const queueNumber = nomor_antrian ? parseInt(nomor_antrian) : null;
     const room = ruang_pemeriksaan || null;
+
     try {
+      // === THIS IS THE UPDATED SQL QUERY ===
+      // It now also updates the main appointment status to 'Checked-in'
       await db.execute(
-        "UPDATE APPOINTMENTS SET nomor_antrian = ?, status_antrian = ?, ruang_pemeriksaan = ? WHERE id_appointment = ?",
+        `UPDATE APPOINTMENTS 
+         SET 
+           nomor_antrian = ?, 
+           status_antrian = ?, 
+           ruang_pemeriksaan = ?,
+           status_janji = 'Checked-in' 
+         WHERE id_appointment = ?`,
         [queueNumber, status_antrian, room, id]
       );
-      res.status(200).json({ message: "Status antrian berhasil diperbarui." });
+
+      res
+        .status(200)
+        .json({ message: "Pasien berhasil di check-in dan masuk antrian." });
     } catch (error) {
       console.error("Error updating queue status:", error);
       res.status(500).json({ message: "Gagal memperbarui status antrian." });

@@ -50,4 +50,52 @@ const sendVerificationEmail = (toEmail, token, type = "verification") => {
   });
 };
 
-module.exports = { sendVerificationEmail };
+const sendAppointmentConfirmationEmail = (options) => {
+  const { to, appointmentDetails } = options;
+
+  const appointmentDate = new Date(
+    appointmentDetails.tanggal_janji
+  ).toLocaleDateString("id-ID", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const subject = "Konfirmasi Janji Temu Anda - Happy Toothy";
+  const htmlContent = `
+    <h2>Konfirmasi Janji Temu Anda di Happy Toothy</h2>
+    <p>Halo ${appointmentDetails.patientName},</p>
+    <p>Janji temu Anda telah berhasil dikonfirmasi. Berikut adalah detailnya:</p>
+    <ul>
+      <li><strong>Dokter:</strong> ${appointmentDetails.doctorName}</li>
+      <li><strong>Tanggal:</strong> ${appointmentDate}</li>
+      <li><strong>Waktu:</strong> ${appointmentDetails.waktu_janji}</li>
+      <li><strong>Catatan Anda:</strong> ${
+        appointmentDetails.catatan_pasien || "-"
+      }</li>
+    </ul>
+    <p>Mohon datang 15 menit lebih awal dari jadwal. Terima kasih!</p>
+    <p><strong>Tim Happy Toothy</strong></p>
+  `;
+
+  const mailOptions = {
+    from: "Happy Toothy <admhappytoothy@gmail.com>",
+    to: to,
+    subject: subject,
+    html: htmlContent,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error("Error sending appointment confirmation email:", error);
+    } else {
+      console.log("Appointment confirmation email sent:", info.response);
+    }
+  });
+};
+
+module.exports = {
+  sendVerificationEmail,
+  sendAppointmentConfirmationEmail,
+};
