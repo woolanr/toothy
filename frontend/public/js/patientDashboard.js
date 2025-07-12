@@ -1,26 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // === FINAL DEBUGGING CHECK ===
-  console.log("DOM Content Loaded. Memulai script...");
-  const checkTimeSlots = document.getElementById("time-slots-container");
-  console.log("Mencari #time-slots-container:", checkTimeSlots);
-  if (!checkTimeSlots) {
-    console.error(
-      "KRITIS: Elemen #time-slots-container TIDAK DITEMUKAN. Periksa ID di file .ejs Anda."
-    );
-  }
-  // ============================
-
   const API_BASE_URL = "http://localhost:3000/pasien";
 
-  // --- Elemen Konten Halaman ---
+  // --- Elemen-elemen ---
   const allPages = {
     dashboard: document.getElementById("dashboard-content"),
     booking: document.getElementById("booking-content"),
     history: document.getElementById("history-content"),
     profile: document.getElementById("profile-content"),
   };
-
-  // --- Link Navigasi ---
   const navLinks = {
     dashboard: document.getElementById("nav-dashboard"),
     booking: document.getElementById("nav-booking"),
@@ -28,14 +15,10 @@ document.addEventListener("DOMContentLoaded", () => {
     profile: document.getElementById("nav-profile"),
   };
   const logoutBtn = document.getElementById("logout-btn");
-
-  // --- Elemen Dasbor ---
   const patientNameGreeting = document.getElementById("patient-name-greeting");
   const upcomingAppointmentCard = document.getElementById(
     "upcoming-appointment-card"
   );
-
-  // --- Elemen Booking ---
   const bookingForm = document.getElementById("booking-form");
   const serviceSelect = document.getElementById("service-select");
   const doctorSelect = document.getElementById("doctor-select");
@@ -43,22 +26,49 @@ document.addEventListener("DOMContentLoaded", () => {
   const timeSlotsContainer = document.getElementById("time-slots-container");
   const selectedTimeInput = document.getElementById("selected-time");
   const bookingMessage = document.getElementById("booking-message");
-
-  // --- Elemen Riwayat ---
   const historyTableBody = document.getElementById("history-table-body");
+  const profileForm = document.getElementById("profile-form");
+  const profileImageDisplay = document.getElementById("profile-image-display");
+  const profilePhotoInput = document.getElementById("profile-photo-input");
+  const changePhotoBtn = document.getElementById("change-photo-btn");
 
   // --- Fungsi Utilitas ---
   const getToken = () => localStorage.getItem("token");
   const formatDate = (dateStr) =>
     dateStr
       ? new Date(dateStr).toLocaleDateString("id-ID", {
-          weekday: "long",
           year: "numeric",
           month: "long",
           day: "numeric",
         })
-      : "N/A";
+      : "";
   const formatTime = (timeStr) => (timeStr ? timeStr.substring(0, 5) : "N/A");
+
+  // --- Fungsi Notifikasi Pop-up (Toast) ---
+  function showToast(message, type = "info") {
+    let toastContainer = document.getElementById("toast-container");
+    if (!toastContainer) {
+      toastContainer = document.createElement("div");
+      toastContainer.id = "toast-container";
+      toastContainer.className = "toast-container";
+      document.body.appendChild(toastContainer);
+    }
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    const iconClass =
+      type === "success"
+        ? "fa-check-circle"
+        : type === "error"
+        ? "fa-times-circle"
+        : "fa-info-circle";
+    toast.innerHTML = `<i class="fas ${iconClass} toast-icon"></i><span>${message}</span>`;
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.classList.add("show"), 100);
+    setTimeout(() => {
+      toast.classList.remove("show");
+      toast.addEventListener("transitionend", () => toast.remove());
+    }, 3000);
+  }
 
   // --- Manajemen Tampilan ---
   function showPage(pageId) {
@@ -68,7 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.values(navLinks).forEach(
       (link) => link && link.classList.remove("active")
     );
-
     if (allPages[pageId]) allPages[pageId].classList.remove("hidden");
     if (navLinks[pageId]) navLinks[pageId].classList.add("active");
 
@@ -83,19 +92,22 @@ document.addEventListener("DOMContentLoaded", () => {
         fetchHistoryData();
         break;
       case "profile":
-        break; // TODO
+        fetchProfileData();
+        break;
     }
   }
 
   // --- Logika API ---
   async function fetchApi(endpoint, options = {}) {
+    const isFormData = options.body instanceof FormData;
+    const headers = {
+      Authorization: `Bearer ${getToken()}`,
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      ...options.headers,
+    };
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`,
-        ...options.headers,
-      },
+      headers,
     });
     const data = await response.json();
     if (!response.ok)
@@ -159,20 +171,16 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Booking Init Error:", error);
     }
   }
-
   async function fetchAvailability() {
     const id_doctor = doctorSelect.value;
     const tanggal_janji = appointmentDate.value;
-
     if (!id_doctor || !tanggal_janji) {
       timeSlotsContainer.innerHTML =
         '<p class="col-span-full text-sm text-gray-500">Pilih dokter dan tanggal terlebih dahulu.</p>';
       return;
     }
-
     timeSlotsContainer.innerHTML =
       '<p class="col-span-full text-sm text-gray-500">Mencari jadwal...</p>';
-
     try {
       const availableSlots = await fetchApi(
         `/availability?id_doctor=${id_doctor}&tanggal_janji=${tanggal_janji}`
@@ -183,18 +191,15 @@ document.addEventListener("DOMContentLoaded", () => {
       timeSlotsContainer.innerHTML = `<p class="col-span-full text-sm text-red-500">${error.message}</p>`;
     }
   }
-
   function renderAvailability(slots) {
     if (!timeSlotsContainer) return;
     timeSlotsContainer.innerHTML = "";
     selectedTimeInput.value = "";
-
     if (slots.length === 0) {
       timeSlotsContainer.innerHTML =
         '<p class="col-span-full text-sm text-gray-500">Tidak ada jadwal tersedia pada tanggal ini.</p>';
       return;
     }
-
     slots.forEach((slot) => {
       const slotEl = document.createElement("div");
       slotEl.className = "time-slot";
@@ -203,12 +208,8 @@ document.addEventListener("DOMContentLoaded", () => {
       timeSlotsContainer.appendChild(slotEl);
     });
   }
-
   async function handleBookingSubmit(e) {
     e.preventDefault();
-    bookingMessage.textContent = "Memproses...";
-    bookingMessage.className = "text-gray-600";
-
     const formData = {
       id_service: serviceSelect.value,
       id_doctor: doctorSelect.value,
@@ -216,27 +217,22 @@ document.addEventListener("DOMContentLoaded", () => {
       waktu_janji: selectedTimeInput.value,
       keluhan: document.getElementById("complaint").value,
     };
-
     if (!formData.waktu_janji) {
-      bookingMessage.textContent = "Harap pilih waktu janji temu.";
-      bookingMessage.className = "text-red-600";
+      showToast("Harap pilih waktu janji temu.", "error");
       return;
     }
-
     try {
       const result = await fetchApi("/appointments", {
         method: "POST",
         body: JSON.stringify(formData),
       });
-      bookingMessage.textContent = result.message;
-      bookingMessage.className = "text-green-600";
+      showToast(result.message, "success");
       bookingForm.reset();
       timeSlotsContainer.innerHTML =
         '<p class="col-span-full text-sm text-gray-500">Pilih dokter dan tanggal terlebih dahulu.</p>';
       setTimeout(() => showPage("dashboard"), 2000);
     } catch (error) {
-      bookingMessage.textContent = error.message;
-      bookingMessage.className = "text-red-600";
+      showToast(error.message, "error");
     }
   }
 
@@ -244,37 +240,161 @@ document.addEventListener("DOMContentLoaded", () => {
   async function fetchHistoryData() {
     if (!historyTableBody) return;
     historyTableBody.innerHTML =
-      '<tr><td colspan="4" class="text-center py-4 text-gray-500">Memuat riwayat...</td></tr>';
+      '<tr><td colspan="5" class="text-center py-4 text-gray-500">Memuat riwayat...</td></tr>';
     try {
       const history = await fetchApi("/appointments/history");
-      if (history.length === 0) {
-        historyTableBody.innerHTML =
-          '<tr><td colspan="4" class="text-center py-4 text-gray-500">Tidak ada riwayat kunjungan ditemukan.</td></tr>';
-        return;
-      }
-      historyTableBody.innerHTML = "";
-      history.forEach((app) => {
-        const row = historyTableBody.insertRow();
-        row.className = "border-b border-gray-200 hover:bg-gray-50";
-        const statusColor =
-          app.status_janji === "Completed"
-            ? "text-green-600"
-            : app.status_janji === "Canceled"
-            ? "text-red-600"
-            : "text-gray-700";
-        row.innerHTML = `
-                <td class="py-3 px-4">${formatDate(
-                  app.tanggal_janji
-                )} - ${formatTime(app.waktu_janji)}</td>
-                <td class="py-3 px-4">${app.doctor_name}</td>
-                <td class="py-3 px-4">${app.nama_layanan}</td>
-                <td class="py-3 px-4 font-semibold ${statusColor}">${
-          app.status_janji
-        }</td>
-            `;
-      });
+      renderHistory(history);
     } catch (error) {
-      historyTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">${error.message}</td></tr>`;
+      historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">${error.message}</td></tr>`;
+    }
+  }
+
+  function renderHistory(appointments) {
+    if (!historyTableBody) return;
+    if (appointments.length === 0) {
+      historyTableBody.innerHTML =
+        '<tr><td colspan="5" class="text-center py-4 text-gray-500">Tidak ada riwayat kunjungan ditemukan.</td></tr>';
+      return;
+    }
+
+    historyTableBody.innerHTML = "";
+    appointments.forEach((app, index) => {
+      const row = historyTableBody.insertRow();
+      row.className = "border-b border-gray-200 hover:bg-gray-50";
+      const statusColor =
+        app.status_janji === "Completed" ? "text-green-600" : "text-red-600";
+      const hasMedicalRecord =
+        app.diagnosis ||
+        app.treatment_plan ||
+        app.actions_taken ||
+        app.doctor_notes ||
+        app.resep_obat;
+      row.innerHTML = `
+            <td class="py-3 px-4">${formatDate(
+              app.tanggal_janji
+            )} - ${formatTime(app.waktu_janji)}</td>
+            <td class="py-3 px-4">${app.doctor_name}</td>
+            <td class="py-3 px-4">${app.nama_layanan}</td>
+            <td class="py-3 px-4 font-semibold ${statusColor}">${
+        app.status_janji
+      }</td>
+            <td class="py-3 px-4">
+                ${
+                  hasMedicalRecord
+                    ? `<button data-index="${index}" class="view-details-btn text-blue-600 hover:underline">Lihat Detail</button>`
+                    : "<span>-</span>"
+                }
+            </td>
+        `;
+      if (hasMedicalRecord) {
+        const detailRow = historyTableBody.insertRow();
+        detailRow.id = `detail-row-${index}`;
+        detailRow.className = "hidden detail-row";
+        detailRow.innerHTML = `
+                <td colspan="5" class="p-4">
+                    <div class="p-4 bg-gray-100 rounded-md space-y-2">
+                        <h4 class="font-bold text-md mb-2">Detail Rekam Medis</h4>
+                        <p><strong>Diagnosis:</strong> ${
+                          app.diagnosis || "Tidak ada data"
+                        }</p>
+                        <p><strong>Rencana Perawatan:</strong> ${
+                          app.treatment_plan || "Tidak ada data"
+                        }</p>
+                        <p><strong>Tindakan yang Dilakukan:</strong> ${
+                          app.actions_taken || "Tidak ada data"
+                        }</p>
+                        <p><strong>Catatan Dokter:</strong> ${
+                          app.doctor_notes || "Tidak ada data"
+                        }</p>
+                        <p><strong>Resep Obat:</strong> ${
+                          app.resep_obat || "Tidak ada data"
+                        }</p>
+                    </div>
+                </td>
+            `;
+      }
+    });
+  }
+
+  // --- Logika Profil ---
+  async function fetchProfileData() {
+    try {
+      const profile = await fetchApi("/profile");
+      renderProfile(profile);
+    } catch (error) {
+      showToast(error.message, "error");
+    }
+  }
+
+  function renderProfile(profile) {
+    if (!profileForm) return;
+    if (profile.foto_profil_url) {
+      profileImageDisplay.src = profile.foto_profil_url;
+    } else {
+      profileImageDisplay.src =
+        "https://placehold.co/128x128/e0e0e0/757575?text=Foto";
+    }
+    document.getElementById("profile-nama").value = profile.nama_lengkap || "";
+    document.getElementById("profile-email").value = profile.email || "";
+    document.getElementById("profile-tanggal-lahir").value =
+      profile.tanggal_lahir
+        ? new Date(profile.tanggal_lahir).toISOString().split("T")[0]
+        : "";
+    document.getElementById("profile-jenis-kelamin").value =
+      profile.jenis_kelamin || "";
+    document.getElementById("profile-nik").value = profile.nik || "";
+    document.getElementById("profile-no-telepon").value =
+      profile.no_telepon || "";
+    document.getElementById("profile-alamat").value = profile.alamat || "";
+    document.getElementById("profile-suhu-tubuh").value =
+      profile.suhu_tubuh || "";
+    document.getElementById("profile-golongan-darah").value =
+      profile.golongan_darah || "";
+    document.getElementById("profile-alergi").value = profile.alergi || "";
+  }
+
+  async function handleProfileUpdate(e) {
+    e.preventDefault();
+    const formData = {
+      nama_lengkap: document.getElementById("profile-nama").value,
+      email: document.getElementById("profile-email").value,
+      tanggal_lahir: document.getElementById("profile-tanggal-lahir").value,
+      jenis_kelamin: document.getElementById("profile-jenis-kelamin").value,
+      nik: document.getElementById("profile-nik").value,
+      no_telepon: document.getElementById("profile-no-telepon").value,
+      alamat: document.getElementById("profile-alamat").value,
+      suhu_tubuh: document.getElementById("profile-suhu-tubuh").value,
+      golongan_darah: document.getElementById("profile-golongan-darah").value,
+      alergi: document.getElementById("profile-alergi").value,
+    };
+    try {
+      const result = await fetchApi("/profile", {
+        method: "PUT",
+        body: JSON.stringify(formData),
+      });
+      showToast(result.message, "success");
+    } catch (error) {
+      showToast(error.message, "error");
+    }
+  }
+
+  async function handlePhotoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    showToast("Mengupload foto...", "info");
+    const formData = new FormData();
+    formData.append("profilePhoto", file);
+    try {
+      const result = await fetchApi("/profile/photo", {
+        method: "POST",
+        body: formData,
+      });
+      showToast(result.message, "success");
+      if (result.filePath) {
+        profileImageDisplay.src = result.filePath;
+      }
+    } catch (error) {
+      showToast(error.message, "error");
     }
   }
 
@@ -286,38 +406,48 @@ document.addEventListener("DOMContentLoaded", () => {
         showPage(key);
       });
   });
-
-  if (logoutBtn)
+  if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("token");
-      window.location.href = "/login.html";
+      // PERBAIKAN: Mengarahkan ke rute /login, bukan file .html
+      window.location.href = "/login";
     });
-
+  }
   if (bookingForm) bookingForm.addEventListener("submit", handleBookingSubmit);
   if (doctorSelect) doctorSelect.addEventListener("change", fetchAvailability);
   if (appointmentDate)
     appointmentDate.addEventListener("change", fetchAvailability);
-
+  if (historyTableBody) {
+    historyTableBody.addEventListener("click", (event) => {
+      if (event.target && event.target.classList.contains("view-details-btn")) {
+        const index = event.target.dataset.index;
+        const detailRow = document.getElementById(`detail-row-${index}`);
+        if (detailRow) {
+          detailRow.classList.toggle("hidden");
+        }
+      }
+    });
+  }
   if (timeSlotsContainer) {
     timeSlotsContainer.addEventListener("click", (event) => {
       const clickedSlot = event.target.closest(".time-slot");
       if (!clickedSlot) return;
-
       timeSlotsContainer
         .querySelectorAll(".time-slot")
         .forEach((el) => el.classList.remove("selected"));
       clickedSlot.classList.add("selected");
       selectedTimeInput.value = clickedSlot.dataset.time;
     });
-  } else {
-    console.error(
-      "Event listener untuk timeSlotsContainer tidak bisa dipasang karena elemennya null."
-    );
   }
+  if (profileForm) profileForm.addEventListener("submit", handleProfileUpdate);
+  if (changePhotoBtn)
+    changePhotoBtn.addEventListener("click", () => profilePhotoInput.click());
+  if (profilePhotoInput)
+    profilePhotoInput.addEventListener("change", handlePhotoUpload);
 
   // --- Inisialisasi ---
   if (!getToken()) {
-    window.location.href = "/login.html";
+    window.location.href = "/login";
   } else {
     showPage("dashboard");
   }
