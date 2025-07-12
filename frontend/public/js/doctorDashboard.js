@@ -163,6 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
       examinationContent.classList.remove("hidden");
       navExamination.classList.remove("hidden");
       navExamination.classList.add("active");
+      navExamination.dataset.appointmentId = appointmentId;
       activeAppointmentId = appointmentId;
       loadExaminationModule(appointmentId);
     }

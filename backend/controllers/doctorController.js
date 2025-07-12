@@ -251,6 +251,8 @@ const doctorController = {
   saveExaminationResult: async (req, res) => {
     const { id_appointment } = req.params;
     const id_doctor = req.user.id_doctor;
+
+    // Destructure semua field dari request body, termasuk resep_obat
     const {
       id_profile,
       chief_complaint,
@@ -285,9 +287,10 @@ const doctorController = {
       );
 
       if (existingRecord.length > 0) {
+        // UPDATE query sekarang menyertakan resep_obat
         await connection.execute(
           `UPDATE DENTAL_MEDICAL_RECORDS
-           SET chief_complaint = ?, dental_examination_findings = ?, diagnosis = ?, treatment_plan = ?,
+           SET chief_complaint = ?, dental_examination_findings = ?, diagnosis = ?, treatment_plan = ?, 
                actions_taken = ?, doctor_notes = ?, resep_obat = ?
            WHERE id_record = ?`,
           [
@@ -297,13 +300,14 @@ const doctorController = {
             treatment_plan,
             actions_taken,
             doctor_notes,
-            resep_obat || null,
+            resep_obat || null, // FIX: Gunakan null jika nilainya kosong atau undefined
             existingRecord[0].id_record,
           ]
         );
       } else {
+        // INSERT query sekarang menyertakan resep_obat
         await connection.execute(
-          `INSERT INTO DENTAL_MEDICAL_RECORDS (id_appointment, id_profile, id_doctor, examination_date, chief_complaint, dental_examination_findings, diagnosis, treatment_plan, actions_taken, doctor_notes, resep_obat)
+          `INSERT INTO DENTAL_MEDICAL_RECORDS (id_appointment, id_profile, id_doctor, examination_date, chief_complaint, dental_examination_findings, diagnosis, treatment_plan, actions_taken, doctor_notes, resep_obat) 
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             id_appointment,
@@ -316,7 +320,7 @@ const doctorController = {
             treatment_plan,
             actions_taken,
             doctor_notes,
-            resep_obat || null,
+            resep_obat || null, // FIX: Gunakan null jika nilainya kosong atau undefined
           ]
         );
       }
@@ -327,16 +331,11 @@ const doctorController = {
       );
 
       await connection.commit();
-      res.status(200).json({
-        message:
-          "Hasil pemeriksaan berhasil disimpan dan status janji temu diperbarui.",
-      });
+      res.status(200).json({ message: "Hasil pemeriksaan berhasil disimpan." });
     } catch (error) {
       await connection.rollback();
       console.error("Error in saveExaminationResult:", error);
-      res.status(500).json({
-        message: "Terjadi kesalahan server saat menyimpan hasil pemeriksaan.",
-      });
+      res.status(500).json({ message: "Gagal menyimpan hasil pemeriksaan." });
     } finally {
       connection.release();
     }
