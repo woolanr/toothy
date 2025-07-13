@@ -6,14 +6,17 @@ document.addEventListener("DOMContentLoaded", () => {
     dashboard: document.getElementById("dashboard-content"),
     booking: document.getElementById("booking-content"),
     history: document.getElementById("history-content"),
+    notifications: document.getElementById("notifications-content"),
     profile: document.getElementById("profile-content"),
   };
   const navLinks = {
     dashboard: document.getElementById("nav-dashboard"),
     booking: document.getElementById("nav-booking"),
     history: document.getElementById("nav-history"),
+    notifications: document.getElementById("nav-notifications"),
     profile: document.getElementById("nav-profile"),
   };
+  const notificationsList = document.getElementById("notifications-list");
   const logoutBtn = document.getElementById("logout-btn");
   const patientNameGreeting = document.getElementById("patient-name-greeting");
   const upcomingAppointmentCard = document.getElementById(
@@ -90,6 +93,9 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
       case "history":
         fetchHistoryData();
+        break;
+      case "notifications":
+        fetchNotifications();
         break;
       case "profile":
         fetchProfileData();
@@ -398,6 +404,88 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function fetchNotifications() {
+    if (!notificationsList) return;
+    notificationsList.innerHTML =
+      '<p class="text-center text-gray-500">Memuat notifikasi...</p>';
+    try {
+      const notifications = await fetchApi("/notifications");
+      renderNotifications(notifications);
+    } catch (error) {
+      notificationsList.innerHTML = `<p class="text-center text-red-500">${error.message}</p>`;
+    }
+  }
+
+  function renderNotifications(notifications) {
+    if (!notificationsList) return;
+    if (notifications.length === 0) {
+      notificationsList.innerHTML =
+        '<p class="text-center text-gray-500">Tidak ada notifikasi.</p>';
+      return;
+    }
+
+    notificationsList.innerHTML = "";
+    notifications.forEach((notif) => {
+      const notifElement = document.createElement("div");
+      notifElement.className = `notification-item p-4 rounded-lg shadow-sm cursor-pointer transition-colors duration-200 ${
+        notif.is_read ? "read" : "unread"
+      }`;
+      notifElement.dataset.id = notif.id_notification;
+      notifElement.dataset.read = notif.is_read;
+
+      notifElement.innerHTML = `
+        <div class="flex justify-between items-start">
+          <h4 class="font-bold">${notif.title}</h4>
+          <span class="text-xs text-gray-500">${timeAgo(
+            notif.created_at
+          )}</span>
+        </div>
+        <p class="mt-1 text-sm">${notif.message}</p>
+      `;
+      notificationsList.appendChild(notifElement);
+    });
+  }
+
+  async function handleMarkAsRead(event) {
+    const notifElement = event.target.closest(".notification-item");
+    if (!notifElement) return;
+
+    const notifId = notifElement.dataset.id;
+    const isRead =
+      notifElement.dataset.read === "true" || notifElement.dataset.read === 1;
+
+    // Jika sudah dibaca, tidak perlu melakukan apa-apa
+    if (isRead) return;
+
+    try {
+      await fetchApi(`/notifications/${notifId}/read`, { method: "PUT" });
+      // Tandai sebagai sudah dibaca di tampilan
+      notifElement.classList.remove("unread");
+      notifElement.classList.add("read");
+      notifElement.dataset.read = "true";
+    } catch (error) {
+      console.error("Gagal menandai notifikasi:", error);
+      // Anda bisa menampilkan toast error di sini jika mau
+    }
+  }
+
+  // --- Fungsi Utilitas Waktu ---
+  function timeAgo(dateString) {
+    const date = new Date(dateString);
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " tahun yang lalu";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " bulan yang lalu";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " hari yang lalu";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " jam yang lalu";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " menit yang lalu";
+    return "Baru saja";
+  }
+
   // --- Event Listeners ---
   Object.keys(navLinks).forEach((key) => {
     if (navLinks[key])
@@ -444,6 +532,9 @@ document.addEventListener("DOMContentLoaded", () => {
     changePhotoBtn.addEventListener("click", () => profilePhotoInput.click());
   if (profilePhotoInput)
     profilePhotoInput.addEventListener("change", handlePhotoUpload);
+  if (notificationsList) {
+    notificationsList.addEventListener("click", handleMarkAsRead);
+  }
 
   // --- Inisialisasi ---
   if (!getToken()) {

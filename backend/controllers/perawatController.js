@@ -1,6 +1,7 @@
 const db = require("../config/database");
 const moment = require("moment");
 const User = require("../models/userModel");
+const { sendAppointmentConfirmationEmail } = require("../utils/email"); // Impor fungsi email
 
 const perawatController = {
   getSummary: async (req, res) => {
@@ -44,10 +45,8 @@ const perawatController = {
         JOIN USERS u_doctor ON doc.id_user = u_doctor.id_user
         JOIN PROFILE d_profile ON u_doctor.id_profile = d_profile.id_profile
       `;
-
       const conditions = [];
       const values = [];
-
       if (req.query.date) {
         conditions.push("a.tanggal_janji = ?");
         values.push(req.query.date);
@@ -60,13 +59,10 @@ const perawatController = {
         conditions.push("a.status_janji = ?");
         values.push(req.query.status);
       }
-
       if (conditions.length > 0) {
         query += " WHERE " + conditions.join(" AND ");
       }
-
       query += " ORDER BY a.tanggal_janji DESC, a.waktu_janji DESC";
-
       const [appointments] = await db.execute(query, values);
       res.status(200).json(appointments);
     } catch (error) {
@@ -79,10 +75,10 @@ const perawatController = {
     try {
       const [doctors] = await db.execute(
         `SELECT d.id_doctor, p.nama_lengkap 
-             FROM DOCTORS d
-             JOIN USERS u ON d.id_user = u.id_user
-             JOIN PROFILE p ON u.id_profile = p.id_profile
-             ORDER BY p.nama_lengkap ASC`
+           FROM DOCTORS d
+           JOIN USERS u ON d.id_user = u.id_user
+           JOIN PROFILE p ON u.id_profile = p.id_profile
+           ORDER BY p.nama_lengkap ASC`
       );
       res.status(200).json(doctors);
     } catch (error) {
@@ -103,8 +99,9 @@ const perawatController = {
     }
   },
 
+  // --- FUNGSI YANG DIPERBARUI ---
   updateAppointment: async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params; // id_appointment
     const {
       id_doctor,
       id_service,
@@ -121,18 +118,39 @@ const perawatController = {
       !waktu_janji ||
       !status_janji
     ) {
-      return res
-        .status(400)
-        .json({ message: "Data tidak lengkap. Layanan wajib diisi." });
+      return res.status(400).json({ message: "Data tidak lengkap." });
     }
 
     try {
+      // 1. Dapatkan detail lengkap janji temu untuk notifikasi & email
+      const [appointmentDetails] = await db.execute(
+        `SELECT 
+           a.id_patient,
+           p_patient.nama_lengkap AS patientName,
+           p_patient.email AS patientEmail,
+           p_doctor.nama_lengkap AS doctorName
+         FROM APPOINTMENTS a
+         JOIN USERS u_patient ON a.id_patient = u_patient.id_user
+         JOIN PROFILE p_patient ON u_patient.id_profile = p_patient.id_profile
+         JOIN DOCTORS d ON a.id_doctor = d.id_doctor
+         JOIN USERS u_doctor ON d.id_user = u_doctor.id_user
+         JOIN PROFILE p_doctor ON u_doctor.id_profile = p_doctor.id_profile
+         WHERE a.id_appointment = ?`,
+        [id]
+      );
+
+      if (appointmentDetails.length === 0) {
+        return res.status(404).json({ message: "Janji temu tidak ditemukan." });
+      }
+      const details = appointmentDetails[0];
+
+      // 2. Update janji temu seperti biasa
       const query = `
-            UPDATE APPOINTMENTS SET
-                id_doctor = ?, id_service = ?, tanggal_janji = ?, 
-                waktu_janji = ?, status_janji = ?, catatan_pasien = ?
-            WHERE id_appointment = ?
-        `;
+        UPDATE APPOINTMENTS SET
+          id_doctor = ?, id_service = ?, tanggal_janji = ?, 
+          waktu_janji = ?, status_janji = ?, catatan_pasien = ?
+        WHERE id_appointment = ?
+      `;
       await db.execute(query, [
         id_doctor,
         id_service,
@@ -142,6 +160,34 @@ const perawatController = {
         catatan_pasien,
         id,
       ]);
+
+      // 3. Jika status diubah menjadi "Confirmed", kirim notifikasi & email
+      if (status_janji === "Confirmed") {
+        // Kirim notifikasi dasbor
+        const notifTitle = "Janji Temu Dikonfirmasi";
+        const notifMessage = `Kabar baik! Janji temu Anda dengan dr. ${
+          details.doctorName
+        } pada tanggal ${moment(tanggal_janji).format(
+          "DD MMMM YYYY"
+        )} telah dikonfirmasi.`;
+        await db.execute(
+          `INSERT INTO NOTIFICATIONS (id_user, title, message) VALUES (?, ?, ?)`,
+          [details.id_patient, notifTitle, notifMessage]
+        );
+
+        // Kirim notifikasi email
+        sendAppointmentConfirmationEmail({
+          to: details.patientEmail,
+          appointmentDetails: {
+            patientName: details.patientName,
+            doctorName: details.doctorName,
+            tanggal_janji: tanggal_janji,
+            waktu_janji: waktu_janji.substring(0, 5),
+            catatan_pasien: catatan_pasien,
+          },
+        });
+      }
+
       res.status(200).json({ message: "Janji temu berhasil diperbarui!" });
     } catch (error) {
       console.error("Error updating appointment:", error);
@@ -201,9 +247,9 @@ const perawatController = {
         patientUserId = newUser.insertId;
       }
       const appointmentQuery = `
-            INSERT INTO APPOINTMENTS (id_patient, id_doctor, id_service, tanggal_janji, waktu_janji, status_janji, catatan_pasien)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `;
+        INSERT INTO APPOINTMENTS (id_patient, id_doctor, id_service, tanggal_janji, waktu_janji, status_janji, catatan_pasien)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
       await connection.execute(appointmentQuery, [
         patientUserId,
         id_doctor,
@@ -249,14 +295,11 @@ const perawatController = {
   },
 
   updateQueueStatus: async (req, res) => {
-    const { id } = req.params; // This is the id_appointment
+    const { id } = req.params;
     const { nomor_antrian, status_antrian, ruang_pemeriksaan } = req.body;
     const queueNumber = nomor_antrian ? parseInt(nomor_antrian) : null;
     const room = ruang_pemeriksaan || null;
-
     try {
-      // === THIS IS THE UPDATED SQL QUERY ===
-      // It now also updates the main appointment status to 'Checked-in'
       await db.execute(
         `UPDATE APPOINTMENTS 
          SET 
@@ -267,7 +310,6 @@ const perawatController = {
          WHERE id_appointment = ?`,
         [queueNumber, status_antrian, room, id]
       );
-
       res
         .status(200)
         .json({ message: "Pasien berhasil di check-in dan masuk antrian." });
@@ -337,7 +379,7 @@ const perawatController = {
     try {
       const [profile] = await db.execute(
         `SELECT p.nama_lengkap, p.email, p.no_telepon, p.tanggal_lahir, p.jenis_kelamin, p.alamat, p.nik, p.foto_profil_url 
-             FROM PROFILE p WHERE id_profile = ?`,
+           FROM PROFILE p WHERE id_profile = ?`,
         [req.user.id_profile]
       );
       if (profile.length === 0) {

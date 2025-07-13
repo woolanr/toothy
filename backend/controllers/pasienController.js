@@ -6,10 +6,9 @@ const path = require("path");
 // Konfigurasi Multer untuk penyimpanan file
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "public/uploads/profiles/"); // Pastikan folder ini ada: backend/public/uploads/profiles
+    cb(null, "public/uploads/profiles/");
   },
   filename: function (req, file, cb) {
-    // Buat nama file unik: idprofile-timestamp.extension
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(
       null,
@@ -133,6 +132,7 @@ const createAppointment = async (req, res) => {
       .json({ message: "Harap lengkapi semua kolom wajib diisi." });
   }
   try {
+    // ... (Semua kode validasi jadwal tidak berubah) ...
     const dayOfWeek = moment(tanggal_janji).day() + 1;
     const [schedules] = await db.execute(
       `SELECT waktu_mulai, waktu_selesai FROM doctor_schedules WHERE id_doctor = ? AND hari_dalam_minggu = ? AND is_available = 1`,
@@ -165,6 +165,8 @@ const createAppointment = async (req, res) => {
           "Jadwal pada waktu ini sudah dipesan. Silakan pilih waktu lain.",
       });
     }
+
+    // Simpan janji temu
     await db.execute(
       `INSERT INTO APPOINTMENTS (id_patient, id_doctor, id_service, tanggal_janji, waktu_janji, status_janji, catatan_pasien)
              VALUES (?, ?, ?, ?, ?, 'Pending', ?)`,
@@ -177,6 +179,9 @@ const createAppointment = async (req, res) => {
         keluhan || null,
       ]
     );
+
+    // --- PERUBAHAN: Logika notifikasi dihapus dari sini ---
+
     res.status(201).json({
       message:
         "Booking janji temu berhasil dibuat dan sedang menunggu konfirmasi.",
@@ -307,6 +312,39 @@ const updateProfilePhoto = async (req, res) => {
   }
 };
 
+const getNotifications = async (req, res) => {
+  try {
+    const [notifications] = await db.execute(
+      `SELECT id_notification, title, message, is_read, created_at 
+         FROM NOTIFICATIONS 
+         WHERE id_user = ? 
+         ORDER BY created_at DESC`,
+      [req.user.id_user]
+    );
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({ message: "Gagal mengambil notifikasi." });
+  }
+};
+
+// --- FUNGSI BARU: Tandai Notifikasi Sebagai Sudah Dibaca ---
+const markNotificationAsRead = async (req, res) => {
+  try {
+    const { id } = req.params; // Mengambil id notifikasi dari URL
+    await db.execute(
+      `UPDATE NOTIFICATIONS SET is_read = TRUE WHERE id_notification = ? AND id_user = ?`,
+      [id, req.user.id_user]
+    );
+    res
+      .status(200)
+      .json({ message: "Notifikasi ditandai sebagai sudah dibaca." });
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+    res.status(500).json({ message: "Gagal memperbarui status notifikasi." });
+  }
+};
+
 // Ekspor semua fungsi dan middleware upload
 module.exports = {
   getDashboardData,
@@ -318,4 +356,6 @@ module.exports = {
   updateProfile,
   updateProfilePhoto,
   upload,
+  getNotifications,
+  markNotificationAsRead,
 };

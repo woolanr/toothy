@@ -51,8 +51,6 @@
         background-color: #f3f4f6; /* gray-200 */
         cursor: not-allowed;
       }
-
-      /* --- STYLE UNTUK POP-UP TOAST --- */
       .toast-container {
         position: fixed;
         top: 1.5rem; /* 24px */
@@ -94,6 +92,14 @@
       .toast-icon {
         margin-right: 0.75rem; /* 12px */
       }
+      .notification-item.unread {
+        background-color: #ffffff; /* white */
+        border-left: 4px solid #3b82f6; /* blue-500 */
+      }
+      .notification-item.read {
+        background-color: #f9fafb; /* gray-50 */
+        color: #6b7280; /* gray-500 */
+      }
     </style>
   </head>
   <body>
@@ -129,6 +135,14 @@
                 class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors duration-200"
                 ><i class="fas fa-history mr-3 w-5 text-center"></i> Riwayat
                 Kunjungan</a
+              >
+            </li>
+            <li>
+              <a
+                href="#"
+                id="nav-notifications"
+                class="nav-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors duration-200"
+                ><i class="fas fa-bell mr-3 w-5 text-center"></i> Notifikasi</a
               >
             </li>
             <li>
@@ -502,6 +516,14 @@
               </div>
             </form>
           </div>
+        </section>
+
+        <section id="notifications-content" class="page-content hidden">
+          <h2 class="text-3xl font-bold text-gray-800 mb-6">Notifikasi</h2>
+          <div
+            id="notifications-list"
+            class="space-y-4 max-w-3xl mx-auto"
+          ></div>
         </section>
       </main>
     </div>
