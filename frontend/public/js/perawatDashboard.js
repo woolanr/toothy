@@ -77,6 +77,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const receiptTotal = document.getElementById("receipt-total");
   const receiptStatus = document.getElementById("receipt-status");
 
+  // Elemen Resep Obat (BARU)
+  const printPrescriptionBtn = document.getElementById(
+    "print-prescription-btn"
+  );
+  const receiptPrescriptionSection = document.getElementById(
+    "receipt-prescription-section"
+  );
+  const receiptPrescription = document.getElementById("receipt-prescription");
+
   // Profile Form Elements
   const profileForm = document.getElementById("profile-form");
   const profilePicPreview = document.getElementById("profile-pic-preview");
@@ -107,13 +116,13 @@ document.addEventListener("DOMContentLoaded", () => {
       style: { background: "linear-gradient(to right, #00b09b, #96c93d)" },
     }).showToast();
   }
-  function showSuccessToast(message) {
+  function showErrorToast(message) {
     Toastify({
       text: message,
       duration: 3000,
       gravity: "bottom",
       position: "center",
-      style: { background: "linear-gradient(to right, #00b09b, #96c93d)" },
+      style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" },
     }).showToast();
   }
   function handleApiError(error) {
@@ -139,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     let currentPage = null;
     for (const key in pages) {
-      if (!pages[key].classList.contains("hidden")) {
+      if (pages[key] && !pages[key].classList.contains("hidden")) {
         currentPage = pages[key];
         break;
       }
@@ -156,8 +165,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showNewPage(pageId, pages, navs) {
-    Object.values(pages).forEach((p) => p.classList.add("hidden"));
-    Object.values(navs).forEach((n) => n.classList.remove("active"));
+    Object.values(pages).forEach((p) => p && p.classList.add("hidden"));
+    Object.values(navs).forEach((n) => n && n.classList.remove("active"));
     const newPage = pages[pageId];
     const newNav = navs[pageId];
     if (newPage) {
@@ -211,7 +220,6 @@ document.addEventListener("DOMContentLoaded", () => {
     queueNumberInput.value = appointment.nomor_antrian || "";
     queueStatusSelect.value = appointment.status_antrian || "Menunggu";
     queueRoomInput.value = appointment.ruang_pemeriksaan || "";
-
     modalBackdrop.classList.remove("hidden");
     queueModal.classList.remove("hidden");
   }
@@ -235,6 +243,17 @@ document.addEventListener("DOMContentLoaded", () => {
     ).toLocaleString("id-ID")}`;
     receiptStatus.textContent = billingItem.status_pembayaran || "Belum Lunas";
     paymentAppointmentId.value = billingItem.id_appointment;
+
+    // Logika untuk menampilkan resep
+    if (billingItem.resep_obat) {
+      receiptPrescription.textContent = billingItem.resep_obat;
+      receiptPrescriptionSection.classList.remove("hidden");
+      printPrescriptionBtn.classList.remove("hidden");
+    } else {
+      receiptPrescriptionSection.classList.add("hidden");
+      printPrescriptionBtn.classList.add("hidden");
+    }
+
     if (billingItem.status_pembayaran === "Lunas") {
       processPaymentBtn.classList.add("hidden");
       paymentMethodSelect.disabled = true;
@@ -361,6 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
     paymentsTableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center">Memuat daftar tagihan...</td></tr>`;
     try {
       const response = await fetch(`${API_BASE_URL}/billing`, {
+        // Menggunakan endpoint yang benar
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       if (!response.ok) throw new Error("Gagal memuat daftar tagihan.");
@@ -370,6 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
       handleApiError(error);
     }
   }
+
   async function fetchStaffProfile() {
     try {
       const response = await fetch(`${API_BASE_URL}/my-profile`, {
@@ -635,6 +656,49 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("token");
     window.location.href = "/login";
   });
+
+  if (printPrescriptionBtn) {
+    printPrescriptionBtn.addEventListener("click", () => {
+      const patientName =
+        document.getElementById("receipt-patient").textContent;
+      const doctorName = document.getElementById("receipt-doctor").textContent;
+      const prescriptionText = receiptPrescription.textContent;
+      const printDate = new Date().toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      const printWindow = window.open("", "", "height=600,width=800");
+      printWindow.document.write("<html><head><title>Resep Obat</title>");
+      printWindow.document.write(
+        "<style>body { font-family: Arial, sans-serif; margin: 40px; } h1, h2 { text-align: center; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th, td { border: 1px solid #ddd; padding: 8px; text-align: left; } .header { margin-bottom: 40px; } .footer { margin-top: 40px; text-align: right; }</style>"
+      );
+      printWindow.document.write("</head><body>");
+      printWindow.document.write(
+        '<div class="header"><h1>Resep Obat</h1><h2>Happy Toothy Dental Clinic</h2></div>'
+      );
+      printWindow.document.write(
+        `<table><tr><th>Nama Pasien</th><td>${patientName}</td></tr>`
+      );
+      printWindow.document.write(
+        `<tr><th>Nama Dokter</th><td>${doctorName}</td></tr>`
+      );
+      printWindow.document.write(
+        `<tr><th>Tanggal</th><td>${printDate}</td></tr></table>`
+      );
+      printWindow.document.write("<h3>Detail Resep:</h3>");
+      printWindow.document.write(
+        `<pre style="white-space: pre-wrap; font-family: inherit; font-size: 1rem;">${prescriptionText}</pre>`
+      );
+      printWindow.document.write(
+        `<div class="footer"><p>Terima kasih, semoga lekas sembuh!</p></div>`
+      );
+      printWindow.document.write("</body></html>");
+      printWindow.document.close();
+      printWindow.print();
+    });
+  }
 
   queueForm.addEventListener("submit", async (e) => {
     e.preventDefault();

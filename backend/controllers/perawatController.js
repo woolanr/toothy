@@ -322,21 +322,23 @@ const perawatController = {
   getBillingList: async (req, res) => {
     try {
       const query = `
-        SELECT 
-          a.id_appointment, p.nama_lengkap AS patient_name, d_profile.nama_lengkap AS doctor_name,
-          s.nama_layanan AS service_name, s.harga AS service_cost, pay.status_pembayaran
-        FROM APPOINTMENTS a
-        JOIN USERS u_patient ON a.id_patient = u_patient.id_user
-        JOIN PROFILE p ON u_patient.id_profile = p.id_profile
-        JOIN DOCTORS doc ON a.id_doctor = doc.id_doctor
-        JOIN USERS u_doctor ON doc.id_user = u_doctor.id_user
-        JOIN PROFILE d_profile ON u_doctor.id_profile = d_profile.id_profile
-        JOIN SERVICES s ON a.id_service = s.id_service
-        LEFT JOIN PAYMENTS pay ON a.id_appointment = pay.id_appointment
-        WHERE a.status_janji = 'Completed' OR pay.status_pembayaran = 'Belum Lunas'
-        GROUP BY a.id_appointment
-        ORDER BY a.tanggal_janji DESC, a.waktu_janji DESC
-      `;
+      SELECT 
+        a.id_appointment, p.nama_lengkap AS patient_name, d_profile.nama_lengkap AS doctor_name,
+        s.nama_layanan AS service_name, s.harga AS service_cost, pay.status_pembayaran,
+        mr.resep_obat -- Tambahkan baris ini
+      FROM APPOINTMENTS a
+      JOIN USERS u_patient ON a.id_patient = u_patient.id_user
+      JOIN PROFILE p ON u_patient.id_profile = p.id_profile
+      JOIN DOCTORS doc ON a.id_doctor = doc.id_doctor
+      JOIN USERS u_doctor ON doc.id_user = u_doctor.id_user
+      JOIN PROFILE d_profile ON u_doctor.id_profile = d_profile.id_profile
+      JOIN SERVICES s ON a.id_service = s.id_service
+      LEFT JOIN PAYMENTS pay ON a.id_appointment = pay.id_appointment
+      LEFT JOIN dental_medical_records mr ON a.id_appointment = mr.id_appointment -- Tambahkan baris ini
+      WHERE a.status_janji = 'Completed' OR pay.status_pembayaran = 'Belum Lunas'
+      GROUP BY a.id_appointment
+      ORDER BY a.tanggal_janji DESC, a.waktu_janji DESC
+    `;
       const [billingList] = await db.execute(query);
       res.status(200).json(billingList);
     } catch (error) {
