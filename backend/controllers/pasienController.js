@@ -180,8 +180,6 @@ const createAppointment = async (req, res) => {
       ]
     );
 
-    // --- PERUBAHAN: Logika notifikasi dihapus dari sini ---
-
     res.status(201).json({
       message:
         "Booking janji temu berhasil dibuat dan sedang menunggu konfirmasi.",
@@ -328,7 +326,6 @@ const getNotifications = async (req, res) => {
   }
 };
 
-// --- FUNGSI BARU: Tandai Notifikasi Sebagai Sudah Dibaca ---
 const markNotificationAsRead = async (req, res) => {
   try {
     const { id } = req.params; // Mengambil id notifikasi dari URL
@@ -345,6 +342,19 @@ const markNotificationAsRead = async (req, res) => {
   }
 };
 
+const getUnreadNotificationsCount = async (req, res) => {
+  try {
+    const [result] = await db.execute(
+      `SELECT COUNT(*) as unreadCount FROM NOTIFICATIONS WHERE id_user = ? AND is_read = FALSE`,
+      [req.user.id_user]
+    );
+    res.status(200).json(result[0]);
+  } catch (error) {
+    console.error("Error fetching unread notifications count:", error);
+    res.status(500).json({ message: "Gagal menghitung notifikasi." });
+  }
+};
+
 // Ekspor semua fungsi dan middleware upload
 module.exports = {
   getDashboardData,
@@ -358,4 +368,5 @@ module.exports = {
   upload,
   getNotifications,
   markNotificationAsRead,
+  getUnreadNotificationsCount,
 };

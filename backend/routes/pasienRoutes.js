@@ -15,6 +15,7 @@ const {
   upload,
   getNotifications,
   markNotificationAsRead,
+  getUnreadNotificationsCount,
 } = require("../controllers/pasienController");
 
 const PASIEN_ROLE_ID = 4;
@@ -36,5 +37,6 @@ router.post(
 );
 router.get("/notifications", getNotifications);
 router.put("/notifications/:id/read", markNotificationAsRead);
+router.get("/notifications/unread-count", getUnreadNotificationsCount);
 
 module.exports = router;

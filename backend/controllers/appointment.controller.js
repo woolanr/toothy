@@ -1,15 +1,12 @@
-// backend/controllers/appointment.controller.js
-
-const pool = require("../config/database"); // Pastikan ini adalah koneksi database promise Anda
+const pool = require("../config/database");
 const { sendAppointmentConfirmationEmail } = require("../utils/email");
 const asyncHandler = require("express-async-handler");
-const moment = require("moment"); // Impor moment untuk format tanggal
+const moment = require("moment");
 
 const updateAppointmentStatus = asyncHandler(async (req, res) => {
   const { status_janji } = req.body;
-  const { id } = req.params; // Ini adalah id_appointment
+  const { id } = req.params;
 
-  // 1. Dapatkan status janji temu saat ini
   const [currentAppointment] = await pool.query(
     "SELECT status_janji FROM appointments WHERE id_appointment = ?",
     [id]
@@ -20,18 +17,15 @@ const updateAppointmentStatus = asyncHandler(async (req, res) => {
   }
   const previousStatus = currentAppointment[0].status_janji;
 
-  // 2. Update status di database
   await pool.query(
     "UPDATE appointments SET status_janji = ? WHERE id_appointment = ?",
     [status_janji, id]
   );
 
-  // 3. Jika status diubah menjadi 'Confirmed', kirim notifikasi & email
   if (
     status_janji.toLowerCase() === "confirmed" &&
     previousStatus.toLowerCase() !== "confirmed"
   ) {
-    // PERBAIKAN: Mengambil detail lengkap dari tabel PROFILE
     const [detailsResult] = await pool.query(
       `SELECT 
          a.id_patient,
@@ -54,7 +48,6 @@ const updateAppointmentStatus = asyncHandler(async (req, res) => {
     if (detailsResult.length > 0) {
       const details = detailsResult[0];
 
-      // --- TAMBAHAN: Kirim notifikasi ke dasbor pasien ---
       const notifTitle = "Janji Temu Dikonfirmasi";
       const notifMessage = `Kabar baik! Janji temu Anda dengan dr. ${
         details.doctorName
@@ -66,14 +59,12 @@ const updateAppointmentStatus = asyncHandler(async (req, res) => {
         `INSERT INTO NOTIFICATIONS (id_user, title, message) VALUES (?, ?, ?)`,
         [details.id_patient, notifTitle, notifMessage]
       );
-      // --- Akhir Tambahan ---
 
-      // Kirim notifikasi email dengan detail yang sudah benar
       sendAppointmentConfirmationEmail({
         to: details.patientEmail,
         appointmentDetails: {
           patientName: details.patientName,
-          doctorName: details.doctorName, // Sekarang berisi nama lengkap
+          doctorName: details.doctorName,
           tanggal_janji: details.tanggal_janji,
           waktu_janji: details.waktu_janji,
           catatan_pasien: details.catatan_pasien,

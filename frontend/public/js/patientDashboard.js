@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
     notifications: document.getElementById("nav-notifications"),
     profile: document.getElementById("nav-profile"),
   };
-  const notificationsList = document.getElementById("notifications-list");
   const logoutBtn = document.getElementById("logout-btn");
   const patientNameGreeting = document.getElementById("patient-name-greeting");
   const upcomingAppointmentCard = document.getElementById(
@@ -34,6 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const profileImageDisplay = document.getElementById("profile-image-display");
   const profilePhotoInput = document.getElementById("profile-photo-input");
   const changePhotoBtn = document.getElementById("change-photo-btn");
+  const notificationsList = document.getElementById("notifications-list");
+  const notificationBadge = document.getElementById("notification-badge");
 
   // --- Fungsi Utilitas ---
   const getToken = () => localStorage.getItem("token");
@@ -46,31 +47,20 @@ document.addEventListener("DOMContentLoaded", () => {
         })
       : "";
   const formatTime = (timeStr) => (timeStr ? timeStr.substring(0, 5) : "N/A");
-
-  // --- Fungsi Notifikasi Pop-up (Toast) ---
-  function showToast(message, type = "info") {
-    let toastContainer = document.getElementById("toast-container");
-    if (!toastContainer) {
-      toastContainer = document.createElement("div");
-      toastContainer.id = "toast-container";
-      toastContainer.className = "toast-container";
-      document.body.appendChild(toastContainer);
-    }
-    const toast = document.createElement("div");
-    toast.className = `toast toast-${type}`;
-    const iconClass =
-      type === "success"
-        ? "fa-check-circle"
-        : type === "error"
-        ? "fa-times-circle"
-        : "fa-info-circle";
-    toast.innerHTML = `<i class="fas ${iconClass} toast-icon"></i><span>${message}</span>`;
-    toastContainer.appendChild(toast);
-    setTimeout(() => toast.classList.add("show"), 100);
-    setTimeout(() => {
-      toast.classList.remove("show");
-      toast.addEventListener("transitionend", () => toast.remove());
-    }, 3000);
+  function timeAgo(dateString) {
+    const date = new Date(dateString);
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " tahun yang lalu";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " bulan yang lalu";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " hari yang lalu";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " jam yang lalu";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " menit yang lalu";
+    return "Baru saja";
   }
 
   // --- Manajemen Tampilan ---
@@ -404,6 +394,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // --- Logika Notifikasi ---
+  async function fetchUnreadNotificationsCount() {
+    try {
+      const data = await fetchApi("/notifications/unread-count");
+      updateNotificationBadge(data.unreadCount);
+    } catch (error) {
+      console.error("Gagal mengambil jumlah notifikasi:", error);
+    }
+  }
+
+  function updateNotificationBadge(count) {
+    if (!notificationBadge) return;
+    if (count > 0) {
+      notificationBadge.textContent = count > 9 ? "9+" : count;
+      notificationBadge.classList.add("show");
+    } else {
+      notificationBadge.classList.remove("show");
+    }
+  }
+
   async function fetchNotifications() {
     if (!notificationsList) return;
     notificationsList.innerHTML =
@@ -423,7 +433,6 @@ document.addEventListener("DOMContentLoaded", () => {
         '<p class="text-center text-gray-500">Tidak ada notifikasi.</p>';
       return;
     }
-
     notificationsList.innerHTML = "";
     notifications.forEach((notif) => {
       const notifElement = document.createElement("div");
@@ -432,7 +441,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }`;
       notifElement.dataset.id = notif.id_notification;
       notifElement.dataset.read = notif.is_read;
-
       notifElement.innerHTML = `
         <div class="flex justify-between items-start">
           <h4 class="font-bold">${notif.title}</h4>
@@ -449,41 +457,20 @@ document.addEventListener("DOMContentLoaded", () => {
   async function handleMarkAsRead(event) {
     const notifElement = event.target.closest(".notification-item");
     if (!notifElement) return;
-
     const notifId = notifElement.dataset.id;
     const isRead =
       notifElement.dataset.read === "true" || notifElement.dataset.read === 1;
-
-    // Jika sudah dibaca, tidak perlu melakukan apa-apa
     if (isRead) return;
 
     try {
       await fetchApi(`/notifications/${notifId}/read`, { method: "PUT" });
-      // Tandai sebagai sudah dibaca di tampilan
       notifElement.classList.remove("unread");
       notifElement.classList.add("read");
       notifElement.dataset.read = "true";
+      fetchUnreadNotificationsCount();
     } catch (error) {
       console.error("Gagal menandai notifikasi:", error);
-      // Anda bisa menampilkan toast error di sini jika mau
     }
-  }
-
-  // --- Fungsi Utilitas Waktu ---
-  function timeAgo(dateString) {
-    const date = new Date(dateString);
-    const seconds = Math.floor((new Date() - date) / 1000);
-    let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + " tahun yang lalu";
-    interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + " bulan yang lalu";
-    interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + " hari yang lalu";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + " jam yang lalu";
-    interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + " menit yang lalu";
-    return "Baru saja";
   }
 
   // --- Event Listeners ---
@@ -494,13 +481,11 @@ document.addEventListener("DOMContentLoaded", () => {
         showPage(key);
       });
   });
-  if (logoutBtn) {
+  if (logoutBtn)
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("token");
-      // PERBAIKAN: Mengarahkan ke rute /login, bukan file .html
       window.location.href = "/login";
     });
-  }
   if (bookingForm) bookingForm.addEventListener("submit", handleBookingSubmit);
   if (doctorSelect) doctorSelect.addEventListener("change", fetchAvailability);
   if (appointmentDate)
@@ -541,5 +526,6 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "/login";
   } else {
     showPage("dashboard");
+    fetchUnreadNotificationsCount();
   }
 });
